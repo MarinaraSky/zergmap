@@ -86,9 +86,12 @@ int             validateHeader(
     zergPacket * packet);
 
 /***************DECODE FUNCTIONS*****************/
+ZergUnit *
+create_unit(void);
 /* Used as a hub to call the other read functions */
 void            parseCapture(
-    FILE * psychicCapture);
+    FILE * psychicCapture,
+	ZergUnit *unit);
 
 /* Reads the Pcap File header, contains a way to check  */
 /* validity for both big endian and little endian       */
@@ -122,7 +125,8 @@ void            readUdpPacket(
 /* Reads Zerg Packet Header */
 void            readZergPacket(
     FILE * psychicCapture,
-    unsigned int *udpTotalLength);
+    unsigned int *udpTotalLength,
+	ZergUnit *unit);
 
 /* Prints Message to screen */
 void            readMessage(
@@ -132,7 +136,8 @@ void            readMessage(
 /* Reads Status packet and prints to screen */
 void            readStatus(
     FILE * psychicCapture,
-    unsigned int payloadLength);
+    unsigned int payloadLength,
+	ZergUnit *unit);
 
 /* Readas Command packet and prints to screen */
 void            readCommand(
@@ -140,7 +145,8 @@ void            readCommand(
 
 /* Reads GPS Packets and prints to screen */
 void            readGPS(
-    FILE * psychicCapture);
+    FILE * psychicCapture,
+	ZergUnit *unit);
 
 /* Takes a char and bitwise manipulates it into an Int */
 void            hexToInt(

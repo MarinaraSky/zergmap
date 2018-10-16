@@ -625,7 +625,8 @@ validateHeader(
 
 void
 parseCapture(
-    FILE * psychicCapture)
+    FILE * psychicCapture,
+	ZergUnit * unit)
 {
     unsigned int    ipTotalLength = 0;
     unsigned int    udpTotalLength = 0;
@@ -634,7 +635,7 @@ parseCapture(
     readEthernetPacket(psychicCapture);
     readIpv4Packet(psychicCapture, &ipTotalLength);
     readUdpPacket(psychicCapture, &udpTotalLength, ipTotalLength);
-    readZergPacket(psychicCapture, &udpTotalLength);
+    readZergPacket(psychicCapture, &udpTotalLength, unit);
     printf("\n");
 }
 
@@ -991,7 +992,8 @@ readUdpPacket(
 void
 readZergPacket(
     FILE * psychicCapture,
-    unsigned int *udpTotalLength)
+    unsigned int *udpTotalLength,
+	ZergUnit *unit)
 {
     unsigned char   buff = 0;
     int             i = 0;
@@ -1066,6 +1068,7 @@ readZergPacket(
     printf("Size: %d\n", packet->totalLength);
     packet->totalLength -= 12;
     printf("From: %d\n", packet->sourceId);
+	unit->id = packet->sourceId;
     printf("To: %d\n", packet->destinationId);
     printf("Sequence: %u\n", packet->sequenceId);
     switch (packet->type)
@@ -1074,13 +1077,13 @@ readZergPacket(
         readMessage(psychicCapture, packet->totalLength);
         break;
     case 1:
-        readStatus(psychicCapture, packet->totalLength);
+        readStatus(psychicCapture, packet->totalLength, unit);
         break;
     case 2:
         readCommand(psychicCapture);
         break;
     case 3:
-        readGPS(psychicCapture);
+        readGPS(psychicCapture, unit);
         break;
     }
     free(packet);
@@ -1106,7 +1109,8 @@ readMessage(
 void
 readStatus(
     FILE * psychicCapture,
-    unsigned int payloadLength)
+    unsigned int payloadLength,
+	ZergUnit *unit)
 {
     unsigned int    intCurrHit = 0;
     unsigned int    intMaxHit = 0;
@@ -1150,6 +1154,9 @@ readStatus(
     printf("Speed: %f m/s\n", status->sSpeed.fSpeed);
     printf("Health: %d/%d\n", status->currHitPoints, status->maxHitPoints);
     printf("Armor: %d\n", status->armor);
+	unit->status->currHitPoints = status->currHitPoints;
+	unit->status->maxHitPoints = status->maxHitPoints;
+
     printf("Name: ");
     while (i < payloadLength)
     {
@@ -1239,7 +1246,8 @@ readCommand(
 
 void
 readGPS(
-    FILE * psychicCapture)
+    FILE * psychicCapture,
+	ZergUnit *unit)
 {
     unsigned char   buff = 0;
     int             i = 0;
@@ -1274,6 +1282,12 @@ readGPS(
         }
         i++;
     }
+	unit->loc->longitude.dLong = gps->longitude.dLong;
+	unit->loc->latitude.dLat = gps->latitude.dLat;
+	unit->loc->altitude.fAltitude = gps->altitude.fAltitude;
+	unit->loc->bearing.fBearing = gps->bearing.fBearing;
+	unit->loc->speed.fSpeed = gps->speed.fSpeed;
+	unit->loc->accuracy.fAccuracy = gps->accuracy.fAccuracy;
     printf("Long: %lf \u00B0\n", gps->longitude.dLong);
     printf("Lat: %lf \u00B0\n", gps->latitude.dLat);
     printf("Alt: %f fathoms\n", gps->altitude.fAltitude);
@@ -1281,4 +1295,22 @@ readGPS(
     printf("Speed: %f m\\s\n", gps->speed.fSpeed);
     printf("Acc: %f m\n", gps->accuracy.fAccuracy);
     free(gps);
+}
+
+ZergUnit *
+create_unit(void)
+{
+	ZergUnit *new = calloc(sizeof(*new), 1);
+	new->status = calloc(sizeof(payload), 1);
+	new->loc = calloc(sizeof(gpsPayload), 1);
+	return new;
+}
+
+void
+print_zergUnit(ZergUnit *z)
+{
+	printf("Z id: %d\n", z->id);
+	printf("Z Lat: %lf\n", z->loc->latitude.dLat);
+	printf("Z Lon: %lf\n", z->loc->longitude.dLong);
+	printf("Z Alt: %f\n", z->loc->altitude.fAltitude);
 }

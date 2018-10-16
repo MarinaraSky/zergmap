@@ -12,26 +12,36 @@ main(
     if (argc > 1)
     {
         FILE           *psychicCapture;
-
-        psychicCapture = fopen(argv[1], "rb");
-        if (psychicCapture == NULL)
-        {
-            printf("Cannot open %s\n", argv[1]);
-            exit(1);
-        }
-        readPcapHeader(psychicCapture);
-        while (!feof(psychicCapture))
-        {
-            if (getc(psychicCapture) == EOF)
-            {
-                break;
-            }
-            else
-            {
-                fseek(psychicCapture, -1, SEEK_CUR);
-            }
-            parseCapture(psychicCapture);
-        }
+		
+		int zergCount = 0;
+		ZergUnit **unitList = calloc(sizeof(ZergUnit*), 1);
+		unitList[zergCount] = create_unit();
+		for(int i = 1; i < argc; i++)
+		{
+			psychicCapture = fopen(argv[i], "rb");
+			if (psychicCapture == NULL)
+			{
+				printf("Cannot open %s\n", argv[1]);
+				exit(1);
+			}
+			readPcapHeader(psychicCapture);
+			while (!feof(psychicCapture))
+			{
+				if (getc(psychicCapture) == EOF)
+				{
+					break;
+				}
+				else
+				{
+					fseek(psychicCapture, -1, SEEK_CUR);
+				}
+				parseCapture(psychicCapture, unitList[zergCount]);
+				print_zergUnit(unitList[zergCount]);
+				zergCount++;
+				unitList = realloc(unitList, sizeof(ZergUnit*) * (zergCount + 1));
+				unitList[zergCount] = create_unit();
+			}
+		}
         fclose(psychicCapture);
     }
     return 0;
