@@ -1331,5 +1331,5 @@ zergUnit_distance(ZergUnit *z1, ZergUnit *z2)
 	double c = 2 *atan2(sqrt(a), sqrt(1-a));
 	double d = Radius * c;
 	d = sqrt(pow(d, 2) + pow((z1->loc->altitude.fAltitude - z2->loc->altitude.fAltitude), 2));	
-	return d;
+	return d * 1000;
 }
