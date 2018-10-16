@@ -42,6 +42,7 @@ main(
 				unitList[zergCount] = create_unit();
 			}
 		}
+		printf("distance between: %lf\n", zergUnit_distance(unitList[0], unitList[1] ) * 1000);
         fclose(psychicCapture);
     }
     return 0;

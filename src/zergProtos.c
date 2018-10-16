@@ -1,8 +1,10 @@
+#define _GNU_SOURCE
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <arpa/inet.h>
 #include <byteswap.h>
+#include <math.h>
 #include "zergProtos.h"
 #include "zergStructs.h"
 
@@ -1313,4 +1315,21 @@ print_zergUnit(ZergUnit *z)
 	printf("Z Lat: %lf\n", z->loc->latitude.dLat);
 	printf("Z Lon: %lf\n", z->loc->longitude.dLong);
 	printf("Z Alt: %f\n", z->loc->altitude.fAltitude);
+}
+
+double
+zergUnit_distance(ZergUnit *z1, ZergUnit *z2)
+{
+	double Radius = 6371;
+	double radZ1Lat = z1->loc->latitude.dLat * (M_PI / 180);
+	double radZ2Lat = z2->loc->latitude.dLat * (M_PI / 180);
+	double radZ1Lon = z1->loc->longitude.dLong * (M_PI / 180);
+	double radZ2Lon = z2->loc->longitude.dLong * (M_PI / 180);
+	double dLat = fabs(radZ2Lat - radZ1Lat);
+	double dLon = fabs(radZ2Lon - radZ1Lon);
+	double a = pow((sin(dLat /2)), 2) + cos(radZ1Lat) * cos(radZ2Lat) * pow(sin(dLon/2), 2);
+	double c = 2 *atan2(sqrt(a), sqrt(1-a));
+	double d = Radius * c;
+	d = sqrt(pow(d, 2) + pow((z1->loc->altitude.fAltitude - z2->loc->altitude.fAltitude), 2));	
+	return d;
 }

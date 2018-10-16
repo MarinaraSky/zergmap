@@ -166,4 +166,7 @@ void            hexToDouble(
 /* Converts a decimal to degrees minutes seconds for gps */
 void            decimalDegreesToDMS(
     double coordinate);
+
+double
+zergUnit_distance(ZergUnit *z1, ZergUnit *z2);
 #endif
