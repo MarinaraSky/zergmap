@@ -3,8 +3,8 @@
 #include <stdlib.h>
 #include <arpa/inet.h>
 #include <byteswap.h>
-#include "zergProtos.h"
-#include "zergStructs.h"
+#include "zerg/zergProtos.h"
+#include "zerg/zergStructs.h"
 
 #define MESSAGE	0x01
 #define STATUS	0x02
