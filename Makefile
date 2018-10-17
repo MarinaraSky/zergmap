@@ -18,4 +18,4 @@ debug: src/decode.c src/encode.c $(CFILES)
 	$(CC) $(CFLAGS) $(DEBUG_FLAGS) -o decode src/decode.c $(CFILES) -lm $(LDLIBS)
 	$(CC) $(CFLAGS) $(DEBUG_FLAGS) -o encode src/encode.c $(CFILES) -lm $(LDLIBS)
 clean:
-	@rm -f $(PROGRAMS) *.o src/*/*.o
+	@rm -f $(PROGRAMS) *.o
