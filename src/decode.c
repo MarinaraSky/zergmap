@@ -6,6 +6,9 @@
 #include "graph/Graph.h"
 #include "dijkstra/Dijkstra.h"
 
+char **
+Zerg_twoPaths(Graph *zergGraph, ZergUnit **unitList, int *zergCount);	
+
 int
 main(
     int argc,
@@ -38,6 +41,11 @@ main(
 				}
 				unitList[zergCount] = create_unit();
 				parseCapture(psychicCapture, unitList[zergCount]);
+				if(zergCount > 0 && unitList[zergCount]->id == unitList[zergCount - 1]->id)
+				{
+					printf("Duplicate GPS Senders. Quitting\n");
+					return 1;
+				}
 				zergCount++;
 				unitList = realloc(unitList, sizeof(ZergUnit*) * (zergCount + 1));
 			}
@@ -71,56 +79,97 @@ main(
 			free(name);
 		}
         fclose(psychicCapture);
-
-		for(int i = 0; i < zergCount; i++)
+		char **results = Zerg_twoPaths(zergGraph, unitList, &zergCount);	
+		if(!results)
 		{
-			printf("%d\n", i);
-			for(int j = 0; j < zergCount; j++)
+			printf("TOO MANY CHANGES REQUIRED.\n");
+		}
+		else if(strcmp(results[0], "NONE") == 0)
+		{
+			printf("ALL ZERG ARE IN POSITION\n");
+		}
+		else
+		{
+			printf("Network Alterations:\n");
+			for(int i = 0; i < zergCount; i++)
 			{
-				if(i != j)
-				{
-					char **route;
-					char **newRoute;
-					char *name = malloc(8);
-					char *next = malloc(8);
-					sprintf(name, "%hu", unitList[i]->id);
-					sprintf(next, "%hu", unitList[j]->id);
-					ssize_t hops = Dijkstra_path(zergGraph, name, next, &route); 
-					bool adjacent = Graph_isAdjacent(zergGraph, name, next);
-					for(ssize_t y = 0; y < hops; y++)
-					{
-						if(y != hops - 1)
-						{
-							Graph_deleteEdge(zergGraph, route[y], route[y+1]);	
-						}
-					}
-					ssize_t newHops = Dijkstra_path(zergGraph, name, next, &newRoute); 
-					if(newHops == 1 && !adjacent)
-					{
-						printf("Delete: %s\n", newRoute[0]);
-						for(int z = 0; z < zergCount; z++)
-						{
-							char *cmp = malloc(8);
-							sprintf(cmp, "%d", unitList[z]->id);
-							if(strcmp(cmp, newRoute[0]) == 0)
-							{
-								unitList[z] = unitList[i];
-							}
-						}
-						Graph_deleteNode(zergGraph, newRoute[0]);
-						zergCount--;
-					}	
-					for(ssize_t y = 0; y < hops; y++)
-					{
-						if(y != hops - 1)
-						{
-							Graph_addEdge(zergGraph, route[y], route[y+1], 1);	
-						}
-					}
-					
-				}
+				printf("Remove Zerg #%s\n", results[i]);
 			}
 		}
     }
     return 0;
+}
+
+char **
+Zerg_twoPaths(Graph *zergGraph, ZergUnit **unitList, int *zergCount)	
+{
+	char **deletions = malloc(sizeof(*deletions));
+	int delTrack = 0;
+	int tmpCount = *zergCount / 2;
+	for(int i = 0; i < *zergCount; i++)
+	{
+		for(int j = 0; j < *zergCount; j++)
+		{
+			if(i != j)
+			{
+				char **route;
+				char **newRoute;
+				char *name = malloc(8);
+				char *next = malloc(8);
+				sprintf(name, "%hu", unitList[i]->id);
+				sprintf(next, "%hu", unitList[j]->id);
+				ssize_t hops = Dijkstra_path(zergGraph, name, next, &route); 
+				bool adjacent = Graph_isAdjacent(zergGraph, name, next);
+				for(ssize_t y = 0; y < hops; y++)
+				{
+					if(y != hops - 1)
+					{
+						Graph_deleteEdge(zergGraph, route[y], route[y+1]);	
+					}
+				}
+				ssize_t newHops = Dijkstra_path(zergGraph, name, next, &newRoute); 
+				if(newHops == 1 && !adjacent)
+				{
+					deletions[delTrack] = malloc(8);
+					strcpy(deletions[delTrack], newRoute[0]);
+					delTrack++;
+					deletions = realloc(deletions, sizeof(*deletions) * delTrack + 1);
+					for(int z = 0; z < *zergCount; z++)
+					{
+						char *cmp = malloc(8);
+						sprintf(cmp, "%d", unitList[z]->id);
+						if(strcmp(cmp, newRoute[0]) == 0)
+						{
+							unitList[z] = unitList[i];
+						}
+					}
+					Graph_deleteNode(zergGraph, newRoute[0]);
+					*zergCount -= 1;
+				}	
+				for(ssize_t y = 0; y < hops; y++)
+				{
+					if(y != hops - 1)
+					{
+						Graph_addEdge(zergGraph, route[y], route[y+1], 1);	
+					}
+				}
+				
+			}
+		}
+	}
+	*zergCount = delTrack;
+	if(delTrack > tmpCount)
+	{
+		return NULL;
+	}
+	if(delTrack > 0)
+	{
+		return deletions;
+	}
+	else
+	{
+		deletions[0] = malloc(8);
+		strcpy(deletions[0], "NONE");
+		return deletions;
+	}
 }
