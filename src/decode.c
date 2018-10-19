@@ -6,8 +6,9 @@
 #include "graph/Graph.h"
 #include "dijkstra/Dijkstra.h"
 
-char **
-Zerg_twoPaths(Graph *zergGraph, ZergUnit **unitList, int *zergCount);	
+char ** Zerg_twoPaths(Graph *zergGraph, ZergUnit **unitList, int *zergCount);	
+void
+deleteRoute(ZergUnit **route, char *node, int count);
 
 int
 main(
@@ -41,14 +42,52 @@ main(
 				}
 				unitList[zergCount] = create_unit();
 				parseCapture(psychicCapture, unitList[zergCount]);
-				if(zergCount > 0 && unitList[zergCount]->id == unitList[zergCount - 1]->id)
+				for(int j = 0; j < zergCount; j++)
 				{
-					printf("Duplicate GPS Senders. Quitting\n");
-					return 1;
+					for(int k = 0; k < zergCount; k++)
+					{
+						if(j != k && unitList[j]->id == unitList[k]->id)
+						{
+							if(unitList[j]->status && unitList[k]->loc == NULL && unitList[k]->loc)
+							{
+								printf("location\n");
+								unitList[j]->loc = unitList[k]->loc;
+								if(unitList[k]->status)
+								{
+									free(unitList[k]->status);
+								}
+								free(unitList[k]);
+								for(int y = k; y < zergCount; y++)
+								{
+									unitList[y]	= unitList[y + 1];
+								}
+							}
+							else if(unitList[j]->loc && unitList[j]->status == NULL && unitList[k]->status)
+							{
+								printf("Status\n");
+								unitList[j]->status = unitList[k]->status;
+								if(unitList[k]->loc)
+								{
+									free(unitList[k]->loc);
+								}
+								free(unitList[k]);
+								for(int y = k; y < zergCount; y++)
+								{
+									unitList[y]	= unitList[y + 1];
+								}
+							}
+							else if(unitList[j]->loc && unitList[k]->loc)
+							{
+								fprintf(stderr, "Multiple GPS from same id.\n");
+								printf("MUL: %hd %hd\n", unitList[j]->id, unitList[k]->id);
+							}
+						}
+					}
 				}
 				zergCount++;
 				unitList = realloc(unitList, sizeof(ZergUnit*) * (zergCount + 1));
 			}
+        	fclose(psychicCapture);
 		}
 		Graph *zergGraph = Graph_create();
 		int tracker = 0;
@@ -78,15 +117,29 @@ main(
 			}
 			free(name);
 		}
-        fclose(psychicCapture);
+		int tmpCount = zergCount;
 		char **results = Zerg_twoPaths(zergGraph, unitList, &zergCount);	
 		if(!results)
 		{
 			printf("TOO MANY CHANGES REQUIRED.\n");
+
 		}
 		else if(strcmp(results[0], "NONE") == 0)
 		{
 			printf("ALL ZERG ARE IN POSITION\n");
+			free(results[0]);
+			for(int j = 0; j < tmpCount; j++)
+			{
+				if(unitList[j]->loc)
+				{
+					free(unitList[j]->loc);
+				}
+				if(unitList[j]->status)
+				{
+					free(unitList[j]->status);
+				}
+				free(unitList[j]);
+			}
 		}
 		else
 		{
@@ -94,8 +147,24 @@ main(
 			for(int i = 0; i < zergCount; i++)
 			{
 				printf("Remove Zerg #%s\n", results[i]);
+				free(results[i]);
+			}
+			for(int j = 0; j < tmpCount - zergCount; j++)
+			{
+				if(unitList[j]->loc)
+				{
+					free(unitList[j]->loc);
+				}
+				if(unitList[j]->status)
+				{
+					free(unitList[j]->status);
+				}
+				free(unitList[j]);
 			}
 		}
+		free(unitList);
+		free(results);
+		Graph_disassemble(zergGraph);
     }
     return 0;
 }
@@ -103,7 +172,7 @@ main(
 char **
 Zerg_twoPaths(Graph *zergGraph, ZergUnit **unitList, int *zergCount)	
 {
-	char **deletions = malloc(sizeof(*deletions));
+	char **deletions = calloc(1, sizeof(*deletions) * *zergCount);
 	int delTrack = 0;
 	int tmpCount = *zergCount / 2;
 	for(int i = 0; i < *zergCount; i++)
@@ -130,19 +199,10 @@ Zerg_twoPaths(Graph *zergGraph, ZergUnit **unitList, int *zergCount)
 				ssize_t newHops = Dijkstra_path(zergGraph, name, next, &newRoute); 
 				if(newHops == 1 && !adjacent)
 				{
-					deletions[delTrack] = malloc(8);
+					deletions[delTrack] = calloc(8, 1);
 					strcpy(deletions[delTrack], newRoute[0]);
 					delTrack++;
-					deletions = realloc(deletions, sizeof(*deletions) * delTrack + 1);
-					for(int z = 0; z < *zergCount; z++)
-					{
-						char *cmp = malloc(8);
-						sprintf(cmp, "%d", unitList[z]->id);
-						if(strcmp(cmp, newRoute[0]) == 0)
-						{
-							unitList[z] = unitList[i];
-						}
-					}
+					deleteRoute(unitList, newRoute[0], *zergCount);
 					Graph_deleteNode(zergGraph, newRoute[0]);
 					*zergCount -= 1;
 				}	
@@ -153,13 +213,36 @@ Zerg_twoPaths(Graph *zergGraph, ZergUnit **unitList, int *zergCount)
 						Graph_addEdge(zergGraph, route[y], route[y+1], 1);	
 					}
 				}
-				
+				free(name);
+				free(next);
+				free(route);
+				free(newRoute);
 			}
 		}
 	}
 	*zergCount = delTrack;
 	if(delTrack > tmpCount)
 	{
+		for(int i = 0; i < tmpCount * 2; i++)
+		{
+			free(deletions[i]);
+		}
+		for(int i = 0; i < *zergCount - 1; i++)
+		{
+			if(unitList[i]->loc)
+			{
+				free(unitList[i]->loc);
+			}
+			if(unitList[i]->status)
+			{
+				free(unitList[i]->status);
+			}
+			if(unitList[i])
+			{
+				free(unitList[i]);
+			}
+		}
+		free(deletions);
 		return NULL;
 	}
 	if(delTrack > 0)
@@ -171,5 +254,32 @@ Zerg_twoPaths(Graph *zergGraph, ZergUnit **unitList, int *zergCount)
 		deletions[0] = malloc(8);
 		strcpy(deletions[0], "NONE");
 		return deletions;
+	}
+}
+
+void
+deleteRoute(ZergUnit **route, char *node, int count)
+{
+	for(int i = 0; i < count; i++)
+	{
+		char *cmp = malloc(8);
+		sprintf(cmp, "%d", route[i]->id);
+		if(strcmp(cmp, node) == 0)
+		{
+			if(route[i]->loc)
+			{
+				free(route[i]->loc);
+			}
+			if(route[i]->status)
+			{
+				free(route[i]->status);
+			}
+			free(route[i]);
+			for(int j = i + 1; j < count; j++)
+			{
+				route[i] = route[j];	
+			}
+		}
+		free(cmp);
 	}
 }
