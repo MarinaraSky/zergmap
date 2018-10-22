@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 #include "zerg/zergStructs.h"
 #include "zerg/zergProtos.h"
 #include "graph/Graph.h"
@@ -40,73 +41,54 @@ main(
 				{
 					fseek(psychicCapture, -1, SEEK_CUR);
 				}
-				unitList[zergCount] = create_unit();
-				parseCapture(psychicCapture, unitList[zergCount]);
+				//unitList[zergCount] = create_unit();
+				parseCapture(psychicCapture, unitList, &zergCount);
+				/*
 				for(int j = 0; j < zergCount; j++)
 				{
-					for(int k = 0; k < zergCount; k++)
+					if(unitList[zergCount]->id == unitList[j]->id)
 					{
-						if(j != k && unitList[j]->id == unitList[k]->id)
+						if(!unitList[zergCount]->status && unitList[j]->status)
 						{
-							if(unitList[j]->status && unitList[k]->loc == NULL && unitList[k]->loc)
-							{
-								printf("location\n");
-								unitList[j]->loc = unitList[k]->loc;
-								if(unitList[k]->status)
-								{
-									free(unitList[k]->status);
-								}
-								free(unitList[k]);
-								for(int y = k; y < zergCount; y++)
-								{
-									unitList[y]	= unitList[y + 1];
-								}
-							}
-							else if(unitList[j]->loc && unitList[j]->status == NULL && unitList[k]->status)
-							{
-								printf("Status\n");
-								unitList[j]->status = unitList[k]->status;
-								if(unitList[k]->loc)
-								{
-									free(unitList[k]->loc);
-								}
-								free(unitList[k]);
-								for(int y = k; y < zergCount; y++)
-								{
-									unitList[y]	= unitList[y + 1];
-								}
-							}
-							else if(unitList[j]->loc && unitList[k]->loc)
-							{
-								fprintf(stderr, "Multiple GPS from same id.\n");
-								printf("MUL: %hd %hd\n", unitList[j]->id, unitList[k]->id);
-							}
+							unitList[zergCount]->status = unitList[j]->status;
+						}
+						else if(!unitList[zergCount]->loc && unitList[j]->loc)
+						{
+							unitList[zergCount]->loc = unitList[j]->loc;
+						}
+						else if(unitList[zergCount]->loc == unitList[j]->loc)
+						{
+							fprintf(stderr, "Multiple GPS from same id.\n");
 						}
 					}
 				}
-				zergCount++;
+				*/
+				//zergCount++;
 				unitList = realloc(unitList, sizeof(ZergUnit*) * (zergCount + 1));
 			}
         	fclose(psychicCapture);
 		}
 		Graph *zergGraph = Graph_create();
-		int tracker = 0;
 		for(int i = 0; i < zergCount; i++)
 		{
-			tracker = i;
 			char *name = malloc(8);
 			sprintf(name, "%hu", unitList[i]->id);
 			Graph_addNode(zergGraph, name);
 			for(int j = 0; j < zergCount; j++)
 			{
-				if(tracker != j)
+				if(unitList[i]->id != unitList[j]->id)
 				{
-					char *next = malloc(8);
+					char *next = calloc(8, 1);
 					sprintf(next, "%hu", unitList[j]->id);
 					Graph_addNode(zergGraph, next);
+					if(unitList[i]->loc == unitList[j]->loc)
+					{
+						continue;
+					}
 					if(zergUnit_distance(unitList[i], unitList[j]) < 1.143)
 					{
 						printf("%s, %s to close.\n", name, next);
+						Graph_addEdge(zergGraph, name, next, 1);
 					}
 					if(zergUnit_distance(unitList[i], unitList[j]) < 15)
 					{
@@ -189,11 +171,23 @@ Zerg_twoPaths(Graph *zergGraph, ZergUnit **unitList, int *zergCount)
 				sprintf(next, "%hu", unitList[j]->id);
 				ssize_t hops = Dijkstra_path(zergGraph, name, next, &route); 
 				bool adjacent = Graph_isAdjacent(zergGraph, name, next);
-				for(ssize_t y = 0; y < hops; y++)
+				if(adjacent && zergUnit_distance(unitList[i], unitList[j]) < 1.143)
 				{
-					if(y != hops - 1)
+					deletions[delTrack] = calloc(8, 1);
+					strcpy(deletions[delTrack], next);
+					delTrack++;
+					deleteRoute(unitList, next, *zergCount);
+					Graph_deleteNode(zergGraph, next);
+					*zergCount -= 1;
+				}
+				for(ssize_t y = 0; y < hops -1; y++)
+				{
+					if(y != hops)
 					{
-						Graph_deleteEdge(zergGraph, route[y], route[y+1]);	
+						if(route[y] && route[y+1])
+						{
+							Graph_deleteEdge(zergGraph, route[y], route[y+1]);	
+						}
 					}
 				}
 				ssize_t newHops = Dijkstra_path(zergGraph, name, next, &newRoute); 
