@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 #include <math.h>
 #include "zerg/zergStructs.h"
 #include "zerg/zergProtos.h"
@@ -19,7 +20,6 @@ main(
     if (argc > 1)
     {
         FILE           *psychicCapture;
-		
 		int zergCount = 0;
 		ZergUnit **unitList = calloc(sizeof(ZergUnit*), 1);
 		for(int i = 1; i < argc; i++)
@@ -87,7 +87,6 @@ main(
 					}
 					if(zergUnit_distance(unitList[i], unitList[j]) < 1.143)
 					{
-						printf("%s, %s to close.\n", name, next);
 						Graph_addEdge(zergGraph, name, next, 1);
 					}
 					if(zergUnit_distance(unitList[i], unitList[j]) < 15)
@@ -98,6 +97,28 @@ main(
 				}
 			}
 			free(name);
+		}
+		for(int j = 0; j < zergCount; j++)
+		{
+			if(unitList[j]->dupe == true)
+			{
+				printf("Duplicates found.\n");
+				for(int k = 0; k < zergCount; k++)
+				{
+					if(unitList[k]->loc)
+					{
+						free(unitList[k]->loc);
+					}
+					if(unitList[k]->status)
+					{
+						free(unitList[k]->status);
+					}
+					free(unitList[k]);
+				}
+				free(unitList);
+				Graph_disassemble(zergGraph);
+				return 1;
+			}
 		}
 		int tmpCount = zergCount;
 		char **results = Zerg_twoPaths(zergGraph, unitList, &zergCount);	
@@ -110,8 +131,17 @@ main(
 		{
 			printf("ALL ZERG ARE IN POSITION\n");
 			free(results[0]);
+			printf("----Zerg Health----\n");
 			for(int j = 0; j < tmpCount; j++)
 			{
+				if(unitList[j]->status && (double) unitList[j]->status->currHitPoints / unitList[j]->status->maxHitPoints < .1)
+				{
+					printf("Zerg ID: %hu\tHealth: %1.0lf%%\n", unitList[j]->id, (double) unitList[j]->status->currHitPoints / unitList[j]->status->maxHitPoints * 100);
+				}
+				else if(!unitList[j]->status)
+				{
+					printf("Zerg ID: %hu\tHealth: Not Found\n", unitList[j]->id);
+				}
 				if(unitList[j]->loc)
 				{
 					free(unitList[j]->loc);
@@ -131,8 +161,17 @@ main(
 				printf("Remove Zerg #%s\n", results[i]);
 				free(results[i]);
 			}
+			printf("----Zerg Health----\n");
 			for(int j = 0; j < tmpCount - zergCount; j++)
 			{
+				if(unitList[j]->status && (double) unitList[j]->status->currHitPoints / unitList[j]->status->maxHitPoints < .1)
+				{
+					printf("Zerg ID: %hu\tHealth: %1.0lf%%\n", unitList[j]->id, (double) unitList[j]->status->currHitPoints / unitList[j]->status->maxHitPoints * 100);
+				}
+				else if(!unitList[j]->status)
+				{
+					printf("Zerg ID: %hu\tHealth: Not Found\n", unitList[j]->id);
+				}
 				if(unitList[j]->loc)
 				{
 					free(unitList[j]->loc);
