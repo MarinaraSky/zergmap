@@ -91,7 +91,8 @@ create_unit(void);
 /* Used as a hub to call the other read functions */
 void            parseCapture(
     FILE * psychicCapture,
-	ZergUnit *unit);
+	ZergUnit **unit,
+	int *zergCount);
 
 /* Reads the Pcap File header, contains a way to check  */
 /* validity for both big endian and little endian       */
@@ -126,7 +127,7 @@ void            readUdpPacket(
 void            readZergPacket(
     FILE * psychicCapture,
     unsigned int *udpTotalLength,
-	ZergUnit *unit);
+	ZergUnit **unit, int *zergCount);
 
 /* Prints Message to screen */
 void            readMessage(
