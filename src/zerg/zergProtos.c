@@ -821,6 +821,7 @@ readIpv4Packet(
             if (header->version == 0x6)
             {
                 fseek(psychicCapture, -1, SEEK_CUR);
+				free(header);
                 readIpv6Packet(psychicCapture, ipTotalLength);
                 return;
             }
@@ -1088,7 +1089,7 @@ readZergPacket(
 		{
 			if(packet->type == 3 && unit[i]->loc)
 			{
-				printf("Duplicate GPS Request.\n");
+				unit[i]->dupe = true;
 				break;
 			}
 			unitToMod = unit[i];	
@@ -1308,13 +1309,16 @@ readGPS(
         }
         i++;
     }
-	unit->loc = calloc(sizeof(gpsPayload), 1);
-	unit->loc->longitude.dLong = gps->longitude.dLong;
-	unit->loc->latitude.dLat = gps->latitude.dLat;
-	unit->loc->altitude.fAltitude = gps->altitude.fAltitude;
-	unit->loc->bearing.fBearing = gps->bearing.fBearing;
-	unit->loc->speed.fSpeed = gps->speed.fSpeed;
-	unit->loc->accuracy.fAccuracy = gps->accuracy.fAccuracy;
+	if(unit != NULL)
+	{
+		unit->loc = calloc(sizeof(gpsPayload), 1);
+		unit->loc->longitude.dLong = gps->longitude.dLong;
+		unit->loc->latitude.dLat = gps->latitude.dLat;
+		unit->loc->altitude.fAltitude = gps->altitude.fAltitude;
+		unit->loc->bearing.fBearing = gps->bearing.fBearing;
+		unit->loc->speed.fSpeed = gps->speed.fSpeed;
+		unit->loc->accuracy.fAccuracy = gps->accuracy.fAccuracy;
+	}
 	/*
     printf("Long: %lf \u00B0\n", gps->longitude.dLong);
     printf("Lat: %lf \u00B0\n", gps->latitude.dLat);
