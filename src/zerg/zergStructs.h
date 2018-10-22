@@ -1,5 +1,6 @@
 #ifndef zergStructs_H_
 #define zergStructs_H_
+#include <stdbool.h>
 
 typedef struct zergPacket
 {
@@ -134,6 +135,7 @@ typedef struct gpsPayload
 typedef struct ZergUnit 
 {
 	unsigned short id;
+	bool dupe;
 	payload *status;
 	gpsPayload *loc;
 }ZergUnit;
