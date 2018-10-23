@@ -23,16 +23,15 @@ main(
 		char *pHealth = NULL;
 		for(int i = 1; i < argc; i++)
 		{
-			if(strcmp(argv[i], "-h") == 0)
+			if(i < argc - 1 && strcmp(argv[i], "-h") == 0)
 			{
 				if(i + 1 < argc)
 				{
 					health = strtod(argv[i + 1], &pHealth) / 100;
-					argc -= 2;
-				}
-				else
-				{
-					argc--;
+					if(*pHealth != '\0')
+					{
+						health = .1;
+					}
 				}
 			}
 		}
@@ -41,10 +40,16 @@ main(
 		ZergUnit **unitList = calloc(sizeof(ZergUnit*), 1);
 		for(int i = 1; i < argc; i++)
 		{
+			strtod(argv[i], &pHealth);
+			if( *pHealth == '\0' || argv[i][0] == '-')
+			{
+				continue;
+			}
 			psychicCapture = fopen(argv[i], "rb");
 			if (psychicCapture == NULL)
 			{
 				printf("Cannot open %s\n", argv[i]);
+				exit(1);
 			}
 			readPcapHeader(psychicCapture);
 			while (!feof(psychicCapture))
