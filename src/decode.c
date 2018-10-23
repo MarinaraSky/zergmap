@@ -19,6 +19,23 @@ main(
 {
     if (argc > 1)
     {
+		double health = .1;
+		char *pHealth = NULL;
+		for(int i = 1; i < argc; i++)
+		{
+			if(strcmp(argv[i], "-h") == 0)
+			{
+				if(i + 1 < argc)
+				{
+					health = strtod(argv[i + 1], &pHealth) / 100;
+					argc -= 2;
+				}
+				else
+				{
+					argc--;
+				}
+			}
+		}
         FILE           *psychicCapture;
 		int zergCount = 0;
 		ZergUnit **unitList = calloc(sizeof(ZergUnit*), 1);
@@ -27,8 +44,7 @@ main(
 			psychicCapture = fopen(argv[i], "rb");
 			if (psychicCapture == NULL)
 			{
-				printf("Cannot open %s\n", argv[1]);
-				exit(1);
+				printf("Cannot open %s\n", argv[i]);
 			}
 			readPcapHeader(psychicCapture);
 			while (!feof(psychicCapture))
@@ -41,29 +57,7 @@ main(
 				{
 					fseek(psychicCapture, -1, SEEK_CUR);
 				}
-				//unitList[zergCount] = create_unit();
 				parseCapture(psychicCapture, unitList, &zergCount);
-				/*
-				for(int j = 0; j < zergCount; j++)
-				{
-					if(unitList[zergCount]->id == unitList[j]->id)
-					{
-						if(!unitList[zergCount]->status && unitList[j]->status)
-						{
-							unitList[zergCount]->status = unitList[j]->status;
-						}
-						else if(!unitList[zergCount]->loc && unitList[j]->loc)
-						{
-							unitList[zergCount]->loc = unitList[j]->loc;
-						}
-						else if(unitList[zergCount]->loc == unitList[j]->loc)
-						{
-							fprintf(stderr, "Multiple GPS from same id.\n");
-						}
-					}
-				}
-				*/
-				//zergCount++;
 				unitList = realloc(unitList, sizeof(ZergUnit*) * (zergCount + 1));
 			}
         	fclose(psychicCapture);
@@ -134,9 +128,10 @@ main(
 			printf("----Zerg Health----\n");
 			for(int j = 0; j < tmpCount; j++)
 			{
-				if(unitList[j]->status && (double) unitList[j]->status->currHitPoints / unitList[j]->status->maxHitPoints < .1)
+				if(unitList[j]->status && (double) unitList[j]->status->currHitPoints / unitList[j]->status->maxHitPoints < health)
 				{
-					printf("Zerg ID: %hu\tHealth: %1.0lf%%\n", unitList[j]->id, (double) unitList[j]->status->currHitPoints / unitList[j]->status->maxHitPoints * 100);
+					printf("Zerg ID: %hu\tHealth: %1.0lf%%\n", unitList[j]->id, 
+							(double) unitList[j]->status->currHitPoints / unitList[j]->status->maxHitPoints * 100);
 				}
 				else if(!unitList[j]->status)
 				{
@@ -164,9 +159,10 @@ main(
 			printf("----Zerg Health----\n");
 			for(int j = 0; j < tmpCount - zergCount; j++)
 			{
-				if(unitList[j]->status && (double) unitList[j]->status->currHitPoints / unitList[j]->status->maxHitPoints < .1)
+				if(unitList[j]->status && (double) unitList[j]->status->currHitPoints / unitList[j]->status->maxHitPoints < health)
 				{
-					printf("Zerg ID: %hu\tHealth: %1.0lf%%\n", unitList[j]->id, (double) unitList[j]->status->currHitPoints / unitList[j]->status->maxHitPoints * 100);
+					printf("Zerg ID: %hu\tHealth: %1.0lf%%\n", unitList[j]->id, 
+							(double) unitList[j]->status->currHitPoints / unitList[j]->status->maxHitPoints * 100);
 				}
 				else if(!unitList[j]->status)
 				{
