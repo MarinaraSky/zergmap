@@ -983,6 +983,13 @@ readUdpPacket(
         }
         i++;
     }
+	if(header->destPort != 3751)
+	{
+		fprintf(stderr, "Invalid Packet Destination.\n");
+        fclose(psychicCapture);
+        free(header);
+        fileCorruption();
+	}
 	/*
     if (header->length != ipTotalLength - 20)
     {
