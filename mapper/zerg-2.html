@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Zerg Battlefield Mapper</title>
+	<link href="../exercises/exercise.css" rel="stylesheet" type="text/css"/>
+	<style type="text/css" media="print">
+<!--
+		a:after {
+			content: " ( " attr(href) " )"
+		}
+-->
+	</style>
+<style type="text/css">
+<!--
+	pre {
+		page-break-inside: avoid;
+	}
+	table {
+		border-collapse: collapse;
+		table-layout: fixed;
+		page-break-inside: avoid;
+	}
+	td, th {
+		border: 1px solid black;
+		padding: .5em .25em;
+	}
+-->
+</style>
+</head>
+<body>
+
+<article class="project">
+	<h1>Zerg Mapper</h1>
+
+	<p>The Zerg, uplifted race of the Xel'Naga, communicate via latent psychic
+	abilities.  Surprisingly, these communications can be picked up via psychic
+	antennae and recorded as standard UDP traffic.</p>
+
+	<p>Your task is to write a progam that, given the psychic captures (PCAPs) of
+	network traffic involving this fell race, determines where the zerg are
+	located on the battlefield.  Some sample files are included for you.</p>
+
+	<p>Each zerg can psychically communicate with other zerg that are within
+	15.00000 meters of it.  As such, they form a mesh network of minds that can
+	span the entire battlefield.  However, their psychic fields interfere at
+	distances of less than 1.25000 yards, preventing either zerg from
+	communicating with others of their race.  Removing one of the two will allow
+	the other to start communicating psychically again.</p>
+
+	<p>A <dfn>fully connected</dfn> zerg network includes a certain amount of
+	redundancy.  Between any two zerg that are not directly adjacent (i.e.,
+	within 15 meters of each other), there should be at least two disjoint routes.
+	That is, given zergling A and zergling B, there are two different ways to get
+	from A to B, with no zerg in common other than the endpoints.</p>
+
+	<p>When fully connected, it may be possible to set up a pyschic resonance
+	cascade that wipes out all the connected zerg.</p>
+
+	<p>Your program should determine which zerg must be eliminated to set up this
+	resonance cascade.  The goal should be to do this in the <strong>fewest
+		changes possible</strong>.</p>
+
+	<p>Additionally, Command wants to be alerted when any zerg's health
+	drops below a certain percentage (default 10%).  Your program should
+	provide a list of such zerg when it runs.</p>
+
+
+	<h2>Packet Format</h2>
+
+	<p><code>.pcap</code> files have a well-understood format.  They consist of a
+	global header for the whole file, followed by a number of pcap-header/data
+	sections.  A good reference is <a
+		href="http://www.kroosec.com/2012/10/a-look-at-pcap-file-format.html">available
+		for pcap format</a>.  Assume version 2.4.  Note that the <code>.pcap</code>
+	packet captures provided do provide the Ethernet frame, IP header, and UDP
+	header, but do not include the Preamble, Start-of-Frame, nor the FCS.
+	Supporting Ethernet version II is required; but QoS data and 802.11 wireless is
+	completely optional. Note that <code>.pcap</code> files may contain multiple
+	captures.</p>
+
+	<p>The Zerg packet format is already well-documented.  However, the Zerg are
+	attemping a rollout of a new packet format.  So, this program should only
+	account for Version 1 of the psychic format (any Zerg using the new protocol
+	have updated wetware, so they will neither cause nor be affected by the
+	psychic interference). Zerg only operate over UDP, on destination port 3751.
+	All other transport/port traffic may be ignored.</p>
+
+	<p>Sample <code>.pcap</code> files may be found in
+	<code>/usr/local/share/instructor_share/zergmap/pcaps</code>
+	on the class VM.  More may be added over time.  It is strongly recommended
+	that you softlink to the directory rather than copying the files, in case
+	any require updates.</p>
+
+
+	<h2>DIcE Rubric</h2>
+
+	<table>
+		<tr>
+			<th rowspan="21">Documentation (20%)</th>
+			<td rowspan="5">Design Plan (5%)</td>
+			<td>Is the documentation easy to understand?</td><td>1%</td></tr>
+		<tr><td>Is the documentation written in a logical sequence?</td><td>1%</td></tr>
+		<tr><td>Does the documentation have clear and concise sections?</td><td>1%</td></tr>
+		<tr><td>Does the documentation provide a clear general overview of the project?</td><td>1%</td></tr>
+		<tr><td>Does the documentation match any provided templates?</td><td>1%</td></tr>
+		</tr>
+		<tr>
+			<td rowspan="4">Testing Procedures (4%)</td>
+			<td>Do the testing procedures demonstrate code coverage and ensure that good practices are used in regard to testing?</td><td>1%</td></tr>
+		<tr><td>Do all test cases indicate the result of the test (pass/fail)?</td><td>1%</td></tr>
+		<tr><td>Are all test cases repeatable following the steps as written?</td><td>1%</td></tr>
+		<tr><td>Does the test report include screen shots where appropriate to indicate test results?</td><td>1%</td></tr>
+		<tr>
+			<td rowspan="4">Project Writeup (4%)</td>
+			<td>Does the writeup document challenges and surpries encountered during the project?</td><td>1%</td></tr>
+		<tr><td>Does the writeup document any lessons learned?</td><td>1%</td></tr>
+		<tr><td>Is the manual well-written?</td><td>1%</td></tr>
+		<tr><td>Does the writeup show growth in understanding of the material?</td><td>1%</td></tr>
+		<tr>
+			<td rowspan="3">Grammar/Spelling (3%)</td>
+			<td>Was the documentation free of grammatical and spelling errors?</td><td>2%</td></tr>
+		<tr><td>Is the document formatting consistent?</td><td>0.5%</td></tr>
+		<tr><td>Were citations done appropriately?</td><td>0.5%</td></tr>
+		<tr>
+			<td rowspan="5">Code Formatting</td>
+			<td>Does the formatting of the code adhere to the style guide?</td><td>1%</td></tr>
+		<tr><td>Are variables named appropriately and enable code readability?</td><td>1%</td></tr>
+		<tr><td>Are functions named appropriately and enable code readability?</td><td>1%</td></tr>
+		<tr><td>Are comments placed appropriately, adhere to the style guide, and enable code readability?</td><td>1%</td></tr>
+		</tr><td>Was borrowed code cited appropriately as per the style guide and the instructor?</td><td>1%</td></tr>
+		<tr>
+			<th rowspan="12">Implementation (35%)</th>
+			<td rowspan="5">Version Control (10%)</td>
+			<td>Is a branch created to address each requirement or feature?</td><td>2%</td></tr>
+		<tr><td>Are only functioning branches merged to master?</td><td>2%</td></tr>
+		<tr><td>Is the history free of generated/artifact files?</td><td>2%</td></tr>
+		<tr><td>Are all good practices followed for version control?</td><td>2%</td></tr>
+		<tr><td>Is the master branch free of direct work?</td><td>2%</td></tr>
+		<tr>
+			<td rowspan="4">Architecture (20%)</td>
+			<td>Are effective and efficient data structures used for the problem at hand?</td><td>5%</td></tr>
+		<tr><td>Did the user adhere to the design outline?</td><td>5%</td></tr>
+		<tr><td>Was the code designed and constructed in a modular fashion?</td><td>5%</td></tr>
+		<tr><td>Were generally sound decisions made with regard to architecture?</td><td>5%</td></tr>
+		<tr>
+			<td rowspan="3">Testing (5%)</td>
+			<td>Were comprehensive and robust test cases constructed to include but not limited to the test cases provided in this document?</td><td>3%</td></tr>
+		<tr><td>Are all tests repeatable?</td><td>1%</td></tr>
+		<tr><td>Do test cases match those describes in documentation?</td><td>1%</td></tr>
+		<tr>
+			<th rowspan="14">Execution (45%)</th>
+			<td rowspan="3">Builds (5%)</td>
+			<td>Does the program compile without error?</td><td>2%</td></tr>
+		<tr><td>Does the program compile with no warnings with <code>-Wall -Wextra -Wpedantic</code>?</td><td>2%</td></tr>
+		<tr><td>Does it support the specified OS associated with the build target?</td><td>1%</td></tr>
+		<tr>
+			<td rowspan="6">Safety (15%)</td>
+			<td>Does the program produce unexpected results?</td><td>1%</td></tr>
+			<tr><td>Did valgrind report no issues or warnings?</td><td>3%</td></tr>
+			<tr><td>Does invalid input cause the program to crash?</td><td>3%</td></tr>
+			<tr><td>Does invalid input cause the program to act inappropriately?</td><td>2%</td></tr>
+			<tr><td>Was all memory freed appropriately?</td><td>4%</td></tr>
+			<tr><td>Are all data initialized to known good values when created?</td><td>2%</td></tr>
+		<tr>
+			<td rowspan="2">Requirements (15%)</td>
+			<td>Were all requirements met?</td><td>8%</td></tr>
+		<tr><td>Were all inputs parsed correctly and yield the correct output?</td><td>7%</td></tr>
+		<tr>
+			<td rowspan="2">Performance (10%)</td>
+			<td>Does the program scale appropriately with input?</td><td>5%</td></tr>
+		<tr><td>Does the program execute in a timely manner?</td><td>5%</td></tr>
+	</table>
+
+	<h2>Functional Requirements</h2>
+
+	<table>
+		<tr>
+			<th>Requirement</th>
+			<th>Area</th>
+		</tr>
+		<tr>
+			<td>The project must build on the class Virtual Machine.</td>
+			<td>Execution</td>
+		</tr>
+		<tr>
+			<td>The project must build the program <code>zergmap</code> in response to
+				<code>make</code>.  <code>make debug</code> should create the program in
+				debugging mode, and <code>make profile</code> should create the program
+				with profiling information (i.e., one that generates a
+				<code>gmon.out</code> file when run).</td>
+			<td>Execution</td>
+		</tr>
+		<tr>
+			<td>The program will accept any number of <code>.pcap</code> files on the
+				command line.</td>
+			<td>Execution</td>
+		</tr>
+		<tr>
+		<td>The program will accept an optional <code>-h</code> flag with an
+			integer, which indicates the percent below which injured zerg IDs should
+			be printed.</td>
+		<td>Execution</td>
+		</tr>
+		<tr>
+		<td>The program will accept packets in IPv4 or IPv6.</td>
+		<td>Execution</td>
+		</tr>
+	</table>
+
+	<h2>Requirements</h2>
+
+	<table>
+		<tr>
+			<th>Requirement</th>
+			<th>Area</th>
+		</tr>
+		<tr>
+			<td>Design plan, test procedure, and writeup documents must be submitted
+				with the project.</td>
+			<td>Documentation</td>
+		</tr>
+		<tr>
+			<td>Test Cases used must be submitted with the project.</td>
+			<td>Implementation</td>
+		</tr>
+		<tr>
+			<td>If packets indicate two conflicting GPS payloads for the same Zerg,
+				then the user should notified on <code>stderr</code>, and the program
+				should be halted.</td>
+			<td>Implementation</td>
+		</tr>
+		<tr>
+			<td>Impossible GPS coordinates (500&deg;N, 8mi. Altitude, etc.) should
+				drop that entire paricular payload from consideration, notify the user
+				on <code>stderr</code>, and continue on.  Do not consider the zerg named
+				in that payload to have been "seen" by the program for purposes of
+				listing low health or resolving conflicts.</td>
+			<td>Implementation</td>
+		</tr>
+		<tr>
+			<td>All source code must be submitted to the class version control system
+				by 1159EDT on the due date specified.</td>
+			<td>Implementation</td>
+		</tr>
+		<tr>
+			<td>All documentation must be submitted to the class version control system
+				by 1359EDT on the due date specified.</td>
+			<td>Implementation</td>
+		</tr>
+	</table>
+
+
+	<h2>Constraints</h2>
+
+	<table>
+		<tr>
+			<th>Constraint</th>
+			<th>Area</th>
+		</tr>
+		<tr>
+			<td>Make use of appropriate variable names.</td>
+			<td>Documentation</td>
+		</tr>
+		<tr>
+			<td>All documentation must be in PDF format.</td>
+			<td>Documentation</td>
+		</tr>
+		<tr>
+			<td>GENIE code style is required.</td>
+			<td>Documentation</td>
+		</tr>
+		<tr>
+			<td>The project should be stored in your assigned VCS account, under the
+				project name <code>zergmap</code>.</td>
+			<td>Implementation</td>
+		</tr>
+		<tr><td>In the event that there are two or more possible solutions, pick the
+			one with the fewest number of changes.  In the event that there are still
+			alternate solutions, any one of them are acceptable.</td>
+			<td>Implementation</td>
+		</tr>
+		<tr>
+			<td>In the event that no health information was found for a particular
+				Zerg, print it in the list of Zerg with low health.</td>
+			<td>Implementation</td>
+		</tr>
+		<tr>
+			<td>No third-party header files/libraries may be used unless signed off by
+			the Program Managers or Instructors.</td>
+			<td>Implementation</td>
+		</tr>
+		<tr>
+			<td>Each logical portion or feature must be built in its own branch.</td>
+			<td>Implementation</td>
+		</tr>
+		<tr>
+			<td>Merge (do not fast-forward) all commits to branch <code>master</code>
+				and tag releases appropriately.</td>
+			<td>Implementation</td>
+		</tr>
+		<tr>
+			<td>The default branch to clone should be <code>master</code>.</td>
+			<td>Implementation</td>
+		</tr>
+		<tr>
+			<td>The project must be written in C.</td>
+			<td>Implementation</td>
+		</tr>
+		<tr>
+			<td>IPv4 to IPv6 transitions (Teredo, etc.) do <em>not</em> need to be supported.</td>
+			<td>Implementation</td>
+		</tr>
+		<tr>
+			<td>Assume that the planet has a diameter of 6371km and is perfectly
+				spherical.</td>
+			<td>Implementation</td>
+		</tr>
+		<tr>
+			<td>Altitude is measured from sea level, and battlefields may have
+				trenches.</td>
+			<td>Implementation</td>
+		</tr>
+		<tr>
+			<td>Little-endian pcap files will be supported.</td>
+			<td>Implementation</td>
+		</tr>
+		<tr>
+			<td>Program must be invoked as <code>zergmap <em>filename</em></code>, where
+				<code><em>filename</em></code> is the file to examine for mapping.</td>
+			<td>Execution</td>
+		</tr>
+		<tr>
+			<td>Program must not leak memory.</td>
+			<td>Execution</td>
+		</tr>
+		<tr>
+			<td>Program must not crash or get stuck in an infinite loop.</td>
+			<td>Execution</td>
+		</tr>
+		<tr>
+			<td>When given an invalid file, the program should exit with an error
+				status and an appropriate message to the user.</td>
+			<td>Execution</td>
+		</tr>
+		<tr>
+			<td>The only output to the screen should be list of zerg to kill, and a
+				list of zerg with low health.</p>
+			<td>Execution</td>
+		</tr>
+		<tr>
+			<td>If the number of adjustments to the network is greater than half of the
+				starting number of Zerg with GPS data, then the program should report
+				that too many changes are needed, rather than trying to make that many
+				changes.</td>
+			<td>Execution</td>
+		</tr>
+
+	</table>
+
+	<h2 style="page-break-before: always">Sample Output</h2>
+
+	<pre><samp>
+<span class="prompt">&gt;</span> <kbd class="invoke">zergmap easy_3n0r/*.pcap</kbd>
+ALL ZERG ARE IN POSITION
+
+<span class="prompt">&gt;</span> <kbd class="invoke">zergmap easy_3n1r/*.pcap</kbd>
+Network Alterations:
+Remove zerg #20210
+
+<span class="prompt">&gt;</span> <kbd class="invoke">zergmap easy_5nxx/*.pcap</kbd>
+TOO MANY CHANGES REQUIRED
+
+<span class="prompt">&gt;</span> <kbd class="invoke">zergmap easy_v6_2n0r/*.pcap</kbd>
+ALL ZERG ARE IN POSITION
+
+<span class="prompt">&gt;</span> <kbd class="invoke">zergmap med_1file/*.pcap</kbd>
+ALL ZERG ARE IN POSITION
+
+<span class="prompt">&gt;</span> <kbd class="invoke">zergmap med_4n0r/*.pcap</kbd>
+ALL ZERG ARE IN POSITION
+
+<span class="prompt">&gt;</span> <kbd class="invoke">zergmap med_4n1r/*.pcap</kbd>
+Network Alterations:
+Remove zerg #3141
+
+<span class="prompt">&gt;</span> <kbd class="invoke">zergmap -h 20 hard_6n0r/*.pcap</kbd>
+ALL ZERG ARE IN POSITION
+</samp></pre>
+
+	<h2>Suggested Features</h2>
+
+	<table>
+		<tr>
+			<th>Feature</th>
+			<th>Area</th>
+			<th></th>
+		</tr>
+		<tr>
+			<td>Write a <code>man(1)</code> page for your program.</td>
+			<td>Documentation</td>
+			<td>2%</td>
+		</tr>
+		<tr>
+			<td>Support big-endian pcap files.</td>
+			<td>Execution</td>
+			<td>3%</td>
+		<tr>
+			<td>Use degree symbols in output when adding zerg</td>
+			<td>Execution</td>
+			<td>2%</td>
+		</tr>
+		<tr>
+			<td>Add support for a <code>-n <var>N</var></code> flag, which limits the
+				number of changes to no more than <var>N</var></td>
+			<td>Execution</td>
+			<td>4%</td>
+		</tr>
+		<tr>
+			<td>Add support for adding Zerg as well as removing them.  The number
+				of changes (additions and deletions) should still be less than half the
+				starting number of devices. It should be possible to run the program
+				with two possible flags: <code>-r</code> for considering removals only
+				(the default if no flag is used), and <code>-a</code> to consider only
+				additions.  If both flags are invoked, consider <em>both</em> additions
+				and removals to find the smallest number of changes.</p>
+				<td>Execution</td>
+				<td>12%</td>
+		</tr>
+		<tr>
+			<td>Add support for <em>one</em> of the following: IP Options, Ethernet
+				802x</td>
+			<td>Execution</td>
+			<td>2%</td>
+
+		</tr>
+		<tr>
+			<td>Add support for <em>one</em> of the following: 4in6, Teredo, or 6in4.</td>
+			<td>Execution</td>
+			<td>8%</td>
+		</tr>
+	</table>
+
+	<p>Other features may be suggested to the instructor or program manager prior
+	to the due date.</p>
+
+
+	<h3>Things You May Find Useful</h3>
+	<ul>
+		<li><code>gdb</code> for debugging</li>
+		<li>The <code>codec</code> project that you have already built</li>
+		<li>The <a href="https://en.wikipedia.org/wiki/Haversine_formula">Haversine</a> Formula</li>
+		<li><code>git submodule</code> for your first project</li>
+		<li>Stopping for the day when you are on a roll, rather than stuck</li>
+		<li><a href="https://en.wikipedia.org/wiki/Suurballe%27s_algorithm">Suurballe's</a> Algorithm</li>
+		<li>Attemping the easiest part first</li>
+		<li>Taking a break when you are stuck, rather than on a roll</li>
+		<li>Not attempting any extra features until the core requirements are done
+			and checked in to your master branch.</li>
+		<li><code>gdb</code> and a rubber duck</li>
+		<li>Having a compilable, runnable program at all times</li>
+		<li>An Adjacency List</li>
+		<li>Working on extra features in separate branches until you are satisfied
+			with them.</li>
+		<li>R-trees</li>
+		<li>Spending the first few hours reading up on these references and
+		sketching out ideas, before beginning to code.</li>
+		<li>An Adjacency Matrix</li>
+		<li>Seriously, <code>gdb</code></li>
+	</ul>
+
+	<h5>Final Wisdom</h5>
+	<ul>
+		<li>Algorithms and Data Structures are not about inventing solutions from
+		whole cloth, but being able to find similar solutions and rework them.</li>
+		<li>Being a programmer does not mean being a subject-matter expert in all
+		things, just being able to fake it enough to turn it into a program.</li>
+		<li>Remember when to optimize.</li>
+		<li>You are not your code.</li>
+	</ul>
+
+
+</article>
+</body>
+</html>

@@ -120,8 +120,8 @@ void            readIpv6Packet(
 /* Reads UPD Packet Header */
 void            readUdpPacket(
     FILE * psychicCapture,
-    unsigned int *udpTotalLength,
-    unsigned int ipTotalLength);
+    unsigned int *udpTotalLength
+    );
 
 /* Reads Zerg Packet Header */
 void            readZergPacket(
