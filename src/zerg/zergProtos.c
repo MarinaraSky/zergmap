@@ -637,7 +637,7 @@ parseCapture(
     readPcapPacket(psychicCapture);
     readEthernetPacket(psychicCapture);
     readIpv4Packet(psychicCapture, &ipTotalLength);
-    readUdpPacket(psychicCapture, &udpTotalLength, ipTotalLength);
+    readUdpPacket(psychicCapture, &udpTotalLength);
     readZergPacket(psychicCapture, &udpTotalLength, unit, zergCount);
     //printf("\n");
 }
@@ -954,8 +954,8 @@ readIpv6Packet(
 void
 readUdpPacket(
     FILE * psychicCapture,
-    unsigned int *udpTotalLength,
-    unsigned int ipTotalLength)
+    unsigned int *udpTotalLength
+    )
 {
     unsigned char   buff = 0;
     int             i = 0;
@@ -1014,9 +1014,11 @@ readZergPacket(
     int             i = 0;
     unsigned int    intTotalLength = 0;
 
+	/*j
     const char     *messageType[] = { "MESSAGE", "STATUS",
         "COMMAND", "GPS"
     };
+	*/
     zergPacket     *packet = calloc(sizeof(zergPacket), 1);
 
     while (i < 12)
@@ -1149,11 +1151,13 @@ readStatus(
     unsigned int    i = 0;
     unsigned char   buff = 0;
 
+	/*
     const char     *types[] = { "Overmind", "Larva", "Cerebrate",
         "Overlord", "Queen", "Drone", "Zergling", "Lurker",
         "Brooding", "Hydralisk", "Guardian", "Scourge",
         "Ultralisk", "Mutalisk", "Defilier", "Devourer"
     };
+	*/
     payload        *status = calloc(sizeof(payload), 1);
 
     for (; i < 12; i++)
