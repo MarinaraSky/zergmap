@@ -136,7 +136,6 @@ Dijkstra_path(
                 if (!pqueue_reprioritize
                     (next, neighbors[n], currDistance + weight))
                 {
-                    fprintf(stderr, "Failed to reprioritize priority queue.");
                     vmap_destroy(prev);
                     map_destroy(distance);
                     return -1;

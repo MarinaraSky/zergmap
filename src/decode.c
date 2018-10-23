@@ -101,7 +101,7 @@ main(
 		{
 			if(unitList[j]->dupe == true)
 			{
-				printf("Duplicates found.\n");
+				fprintf(stderr, "Duplicates found.\n");
 				for(int k = 0; k < zergCount; k++)
 				{
 					if(unitList[k]->loc)
@@ -240,6 +240,32 @@ Zerg_twoPaths(Graph *zergGraph, ZergUnit **unitList, int *zergCount)
 					Graph_deleteNode(zergGraph, newRoute[0]);
 					*zergCount -= 1;
 				}	
+				char **split = calloc(1, sizeof(*split) * 10);
+				int splitCount = 0;
+				for(int z = 1; z < hops - 1; z++)
+				{
+					for(int a = 1; a < newHops - 1; a++)
+					{
+						if(strcmp(route[z], newRoute[a]) == 0)
+						{
+							split[splitCount++] = strdup(newRoute[a]);
+						}
+					}		
+				}
+				if(!adjacent && splitCount == 1)
+				{
+					deletions[delTrack] = calloc(8, 1);
+					strcpy(deletions[delTrack], newRoute[0]);
+					delTrack++;
+					deleteRoute(unitList, newRoute[0], *zergCount);
+					Graph_deleteNode(zergGraph, newRoute[0]);
+					*zergCount -= 1;
+				}
+				for(int z = 0; z < splitCount; z++)
+				{
+					free(split[z]);
+				}
+				free(split);
 				for(ssize_t y = 0; y < hops; y++)
 				{
 					if(y != hops - 1)
