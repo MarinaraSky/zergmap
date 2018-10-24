@@ -764,6 +764,8 @@ readEthernetPacket(
     }
     if (header->etherType != 0x0800 && header->etherType != 0x86DD)
     {
+		printf("Ether Type: %x\n", header->etherType);
+		printf("Index: %ld\n", ftell(psychicCapture));
         printf("EtherType is invalid.\n");
         free(header);
         fclose(psychicCapture);
@@ -876,6 +878,12 @@ readIpv4Packet(
         }
         i++;
     }
+	if(header->protocol == 0x29)
+	{
+		free(header);
+        readIpv6Packet(psychicCapture, ipTotalLength);
+		return;
+	}
     if (header->protocol != 0x11)
     {
         printf("Not UDP Packet.\n");
@@ -943,6 +951,7 @@ readIpv6Packet(
     *ipTotalLength = header->payloadLength;
     if (header->nextHeader != 0x11)
     {
+		printf("NextHeader: %c\n", header->nextHeader);
         printf("Not a UDP Packet.\n");
         fclose(psychicCapture);
         free(header);

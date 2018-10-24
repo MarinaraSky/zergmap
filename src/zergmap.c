@@ -21,7 +21,7 @@ main(
     {
 		double health = .1;
 		char *pHealth = NULL;
-		int changeLimit = 0;
+		signed int changeLimit = 0;
 		char *pChangeLimit = NULL;
 		for(int i = 1; i < argc; i++)
 		{
@@ -30,22 +30,31 @@ main(
 				if(i + 1 < argc)
 				{
 					health = strtod(argv[i + 1], &pHealth) / 100;
-					if(*pHealth != '\0')
+					if(health < 0 || *pHealth != '\0')
 					{
-						health = .1;
+						printf("Usage: ./zergmap <filename> [-n <limit>] [-h <threshold>]\n");
+						return 1;
 					}
+					i++;
 				}
 			}
-			if(i < argc - 1 && strcmp(argv[i], "-n") == 0)
+			else if(i < argc - 1 && strcmp(argv[i], "-n") == 0)
 			{
 				if(i + 1 < argc)
 				{
 					changeLimit = strtol(argv[i + 1], &pChangeLimit, 10);
-					if(*pChangeLimit != '\0')
+					if(changeLimit < 0 || *pChangeLimit != '\0')
 					{
-						changeLimit = 0;
+						printf("Usage: ./zergmap <filename> [-n <limit>] [-h <threshold>]\n");
+						return 1;
 					}
+					i++;
 				}
+			}
+			else if(strcmp(argv[i], "-n") == 0 || strcmp(argv[i], "-h") == 0)
+			{
+				printf("Usage: ./zergmap <filename> [-n <limit>] [-h <threshold>]\n");
+				return 1;
 			}
 		}
         FILE           *psychicCapture;
@@ -54,8 +63,9 @@ main(
 		for(int i = 1; i < argc; i++)
 		{
 			strtod(argv[i], &pHealth);
-			if( *pHealth == '\0' || argv[i][0] == '-')
+			if(*pHealth == '\0' || argv[i][0] == '-')
 			{
+				i++;
 				continue;
 			}
 			psychicCapture = fopen(argv[i], "rb");
