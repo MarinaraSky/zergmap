@@ -12,6 +12,6 @@ zergmap: src/zergmap.c $(CFILES)
 	$(CC) $(CFLAGS) -o $@ src/zergmap.c $(CFILES) -lm $(LDLIBS)
 
 debug: src/zergmap.c $(CFILES)
-	$(CC) $(CFLAGS) $(DEBUG_FLAGS) -o $@ src/zergmap.c $(CFILES) -lm $(LDLIBS)
+	$(CC) $(CFLAGS) $(DEBUG_FLAGS) -o $(PROGRAMS) src/zergmap.c $(CFILES) -lm $(LDLIBS)
 clean:
 	@rm -f $(PROGRAMS) $(CFILES) *.o
