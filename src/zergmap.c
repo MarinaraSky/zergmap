@@ -304,11 +304,11 @@ Zerg_twoPaths(Graph *zergGraph, ZergUnit **unitList, int *zergCount, int changeL
 	*zergCount = delTrack;
 	if(delTrack > tmpCount)
 	{
-		for(int i = 0; i < *zergCount * 2; i++)
+		for(int i = 0; i < origCount; i++)
 		{
 			free(deletions[i]);
 		}
-		for(int i = 0; i < origCount - delTrack; i++)
+		for(int i = 0; i < origCount - *zergCount; i++)
 		{
 			if(unitList[i]->loc)
 			{
