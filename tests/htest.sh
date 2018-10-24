@@ -5,6 +5,6 @@ then
 fi
 for x in $(ls mapper/pcaps); do
 	echo $x 
-	./zergmap mapper/pcaps/$x/* -n 2 
+	./zergmap mapper/pcaps/$x/* -h 85
 	echo ================================
 	done;
