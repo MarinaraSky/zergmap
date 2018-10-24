@@ -8,7 +8,7 @@
 #include "graph/Graph.h"
 #include "dijkstra/Dijkstra.h"
 
-char ** Zerg_twoPaths(Graph *zergGraph, ZergUnit **unitList, int *zergCount);	
+char ** Zerg_twoPaths(Graph *zergGraph, ZergUnit **unitList, int *zergCount, int changeLimit);	
 void
 deleteRoute(ZergUnit **route, char *node, int count);
 
@@ -21,6 +21,8 @@ main(
     {
 		double health = .1;
 		char *pHealth = NULL;
+		int changeLimit = 0;
+		char *pChangeLimit = NULL;
 		for(int i = 1; i < argc; i++)
 		{
 			if(i < argc - 1 && strcmp(argv[i], "-h") == 0)
@@ -31,6 +33,17 @@ main(
 					if(*pHealth != '\0')
 					{
 						health = .1;
+					}
+				}
+			}
+			if(i < argc - 1 && strcmp(argv[i], "-n") == 0)
+			{
+				if(i + 1 < argc)
+				{
+					changeLimit = strtol(argv[i + 1], &pChangeLimit, 10);
+					if(*pChangeLimit != '\0')
+					{
+						changeLimit = 0;
 					}
 				}
 			}
@@ -59,8 +72,7 @@ main(
 					break;
 				}
 				else
-				{
-					fseek(psychicCapture, -1, SEEK_CUR);
+				{ fseek(psychicCapture, -1, SEEK_CUR);
 				}
 				parseCapture(psychicCapture, unitList, &zergCount);
 				unitList = realloc(unitList, sizeof(ZergUnit*) * (zergCount + 1));
@@ -120,7 +132,7 @@ main(
 			}
 		}
 		int tmpCount = zergCount;
-		char **results = Zerg_twoPaths(zergGraph, unitList, &zergCount);	
+		char **results = Zerg_twoPaths(zergGraph, unitList, &zergCount, changeLimit);	
 		if(!results)
 		{
 			printf("TOO MANY CHANGES REQUIRED.\n");
@@ -192,11 +204,20 @@ main(
 }
 
 char **
-Zerg_twoPaths(Graph *zergGraph, ZergUnit **unitList, int *zergCount)	
+Zerg_twoPaths(Graph *zergGraph, ZergUnit **unitList, int *zergCount, int changeLimit)	
 {
 	char **deletions = calloc(1, sizeof(*deletions) * *zergCount);
 	int delTrack = 0;
-	int tmpCount = *zergCount / 2;
+	int tmpCount = 0;
+	int origCount = *zergCount;
+	if(changeLimit == 0)
+	{
+		tmpCount = *zergCount / 2;
+	}
+	else
+	{
+		tmpCount = changeLimit;
+	}
 	for(int i = 0; i < *zergCount; i++)
 	{
 		for(int j = 0; j < *zergCount; j++)
@@ -283,11 +304,11 @@ Zerg_twoPaths(Graph *zergGraph, ZergUnit **unitList, int *zergCount)
 	*zergCount = delTrack;
 	if(delTrack > tmpCount)
 	{
-		for(int i = 0; i < tmpCount * 2; i++)
+		for(int i = 0; i < *zergCount * 2; i++)
 		{
 			free(deletions[i]);
 		}
-		for(int i = 0; i < *zergCount - 1; i++)
+		for(int i = 0; i < origCount - delTrack; i++)
 		{
 			if(unitList[i]->loc)
 			{
