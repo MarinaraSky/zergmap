@@ -34,9 +34,10 @@ main(
 					{
 						health = .1;
 					}
+					i++;
 				}
 			}
-			if(i < argc - 1 && strcmp(argv[i], "-n") == 0)
+			else if(i < argc - 1 && strcmp(argv[i], "-n") == 0)
 			{
 				if(i + 1 < argc)
 				{
@@ -45,6 +46,7 @@ main(
 					{
 						changeLimit = 0;
 					}
+					i++;
 				}
 			}
 		}
@@ -54,8 +56,9 @@ main(
 		for(int i = 1; i < argc; i++)
 		{
 			strtod(argv[i], &pHealth);
-			if( *pHealth == '\0' || argv[i][0] == '-')
+			if(*pHealth == '\0' || argv[i][0] == '-')
 			{
+				i++;
 				continue;
 			}
 			psychicCapture = fopen(argv[i], "rb");
