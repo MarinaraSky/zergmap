@@ -1329,12 +1329,18 @@ readGPS(
         }
         i++;
     }
+	if(gps->longitude.dLong > 180.0 || gps->latitude.dLat > 180.0)
+	{
+		fprintf(stderr, "Incorrect Longitude or Latitude.\n");
+		free(gps);
+		return;
+	}
 	if(unit != NULL)
 	{
 		unit->loc = calloc(sizeof(gpsPayload), 1);
 		unit->loc->longitude.dLong = gps->longitude.dLong;
 		unit->loc->latitude.dLat = gps->latitude.dLat;
-		unit->loc->altitude.fAltitude = gps->altitude.fAltitude;
+		unit->loc->altitude.fAltitude = gps->altitude.fAltitude * 1.8288;
 		unit->loc->bearing.fBearing = gps->bearing.fBearing;
 		unit->loc->speed.fSpeed = gps->speed.fSpeed;
 		unit->loc->accuracy.fAccuracy = gps->accuracy.fAccuracy;
@@ -1356,6 +1362,7 @@ create_unit(void)
 	ZergUnit *new = calloc(sizeof(*new), 1);
 	new->status = NULL;
 	new->loc = NULL;
+	new->seen = 0;
 	return new;
 }
 
@@ -1371,7 +1378,7 @@ print_zergUnit(ZergUnit *z)
 double
 zergUnit_distance(ZergUnit *z1, ZergUnit *z2)
 {
-	double Radius = 6371;
+	double Radius = 6371000;
 	double radZ1Lat = z1->loc->latitude.dLat * (M_PI / 180);
 	double radZ2Lat = z2->loc->latitude.dLat * (M_PI / 180);
 	double radZ1Lon = z1->loc->longitude.dLong * (M_PI / 180);
@@ -1382,5 +1389,5 @@ zergUnit_distance(ZergUnit *z1, ZergUnit *z2)
 	double c = 2 *atan2(sqrt(a), sqrt(1-a));
 	double d = Radius * c;
 	d = sqrt(pow(d, 2) + pow((z1->loc->altitude.fAltitude - z2->loc->altitude.fAltitude), 2));	
-	return d * 1000;
+	return d;
 }

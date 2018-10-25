@@ -30,7 +30,7 @@ main(
 				if(i + 1 < argc)
 				{
 					health = strtod(argv[i + 1], &pHealth) / 100;
-					if(health < 0 || *pHealth != '\0')
+					if(*pHealth != '\0')
 					{
 						printf("Usage: ./zergmap <filename> [-n <limit>] [-h <threshold>]\n");
 						return 1;
@@ -141,6 +141,19 @@ main(
 				return 1;
 			}
 		}
+		printf("----Zerg Health----\n");
+		for(int j = 0; j < zergCount; j++)
+		{
+			if(unitList[j]->status && (double) unitList[j]->status->currHitPoints / unitList[j]->status->maxHitPoints < health)
+			{
+				printf("Zerg ID: %hu\tHealth: %1.2lf%%\n", unitList[j]->id, 
+						(double) unitList[j]->status->currHitPoints / unitList[j]->status->maxHitPoints * 100);
+			}
+			else if(!unitList[j]->status)
+			{
+				printf("Zerg ID: %hu\tHealth: Not Found\n", unitList[j]->id);
+			}
+		}
 		int tmpCount = zergCount;
 		char **results = Zerg_twoPaths(zergGraph, unitList, &zergCount, changeLimit);	
 		if(!results)
@@ -152,18 +165,8 @@ main(
 		{
 			printf("ALL ZERG ARE IN POSITION\n");
 			free(results[0]);
-			printf("----Zerg Health----\n");
 			for(int j = 0; j < tmpCount; j++)
 			{
-				if(unitList[j]->status && (double) unitList[j]->status->currHitPoints / unitList[j]->status->maxHitPoints < health)
-				{
-					printf("Zerg ID: %hu\tHealth: %1.0lf%%\n", unitList[j]->id, 
-							(double) unitList[j]->status->currHitPoints / unitList[j]->status->maxHitPoints * 100);
-				}
-				else if(!unitList[j]->status)
-				{
-					printf("Zerg ID: %hu\tHealth: Not Found\n", unitList[j]->id);
-				}
 				if(unitList[j]->loc)
 				{
 					free(unitList[j]->loc);
@@ -183,18 +186,8 @@ main(
 				printf("Remove Zerg #%s\n", results[i]);
 				free(results[i]);
 			}
-			printf("----Zerg Health----\n");
 			for(int j = 0; j < tmpCount - zergCount; j++)
 			{
-				if(unitList[j]->status && (double) unitList[j]->status->currHitPoints / unitList[j]->status->maxHitPoints < health)
-				{
-					printf("Zerg ID: %hu\tHealth: %1.0lf%%\n", unitList[j]->id, 
-							(double) unitList[j]->status->currHitPoints / unitList[j]->status->maxHitPoints * 100);
-				}
-				else if(!unitList[j]->status)
-				{
-					printf("Zerg ID: %hu\tHealth: Not Found\n", unitList[j]->id);
-				}
 				if(unitList[j]->loc)
 				{
 					free(unitList[j]->loc);
@@ -262,15 +255,7 @@ Zerg_twoPaths(Graph *zergGraph, ZergUnit **unitList, int *zergCount, int changeL
 					}
 				}
 				ssize_t newHops = Dijkstra_path(zergGraph, name, next, &newRoute); 
-				if(newHops == 1 && !adjacent)
-				{
-					deletions[delTrack] = calloc(8, 1);
-					strcpy(deletions[delTrack], newRoute[0]);
-					delTrack++;
-					deleteRoute(unitList, newRoute[0], *zergCount);
-					Graph_deleteNode(zergGraph, newRoute[0]);
-					*zergCount -= 1;
-				}	
+					
 				char **split = calloc(1, sizeof(*split) * 10);
 				int splitCount = 0;
 				for(int z = 1; z < hops - 1; z++)
@@ -283,14 +268,27 @@ Zerg_twoPaths(Graph *zergGraph, ZergUnit **unitList, int *zergCount, int changeL
 						}
 					}		
 				}
-				if(!adjacent && splitCount == 1)
+				if((newHops == 1 && !adjacent) || (!adjacent && splitCount == 1))
 				{
-					deletions[delTrack] = calloc(8, 1);
-					strcpy(deletions[delTrack], newRoute[0]);
-					delTrack++;
-					deleteRoute(unitList, newRoute[0], *zergCount);
-					Graph_deleteNode(zergGraph, newRoute[0]);
-					*zergCount -= 1;
+					char **neighbors = NULL;
+					if(Graph_getNeighbors(zergGraph, name, &neighbors) < Graph_getNeighbors(zergGraph, next, &neighbors))
+					{
+						deletions[delTrack] = calloc(8, 1);
+						strcpy(deletions[delTrack], name);
+						delTrack++;
+						deleteRoute(unitList, name, *zergCount);
+						Graph_deleteNode(zergGraph, name);
+						*zergCount -= 1;
+					}
+					else
+					{
+						deletions[delTrack] = calloc(8, 1);
+						strcpy(deletions[delTrack], next);
+						delTrack++;
+						deleteRoute(unitList, next, *zergCount);
+						Graph_deleteNode(zergGraph, next);
+						*zergCount -= 1;
+					}	
 				}
 				for(int z = 0; z < splitCount; z++)
 				{

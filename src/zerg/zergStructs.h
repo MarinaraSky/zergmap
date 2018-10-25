@@ -138,6 +138,7 @@ typedef struct ZergUnit
 	bool dupe;
 	payload *status;
 	gpsPayload *loc;
+	int seen;
 }ZergUnit;
 
 #endif
