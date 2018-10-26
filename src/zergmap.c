@@ -89,6 +89,21 @@ main(
 			}
         	fclose(psychicCapture);
 		}
+		printf("----Zerg Health----\n");
+		for(int j = 0; j < zergCount; j++)
+		{
+			if(unitList[j]->status && (double) unitList[j]->status->currHitPoints / unitList[j]->status->maxHitPoints < health)
+			{
+				printf("Zerg ID: %hu\tHealth: %1.2lf%%\n", unitList[j]->id, 
+						(double) unitList[j]->status->currHitPoints / unitList[j]->status->maxHitPoints * 100);
+			}
+			else if(!unitList[j]->status)
+			{
+				printf("Zerg ID: %hu\tHealth: Not Found\n", unitList[j]->id);
+			}
+		}
+		int tmpCount = zergCount;
+		puts("");
 		Graph *zergGraph = Graph_create();
 		for(int i = 0; i < zergCount; i++)
 		{
@@ -105,10 +120,6 @@ main(
 					if(unitList[i]->loc == unitList[j]->loc)
 					{
 						continue;
-					}
-					if(zergUnit_distance(unitList[i], unitList[j]) < 1.143)
-					{
-						Graph_addEdge(zergGraph, name, next, 1);
 					}
 					if(zergUnit_distance(unitList[i], unitList[j]) < 15)
 					{
@@ -141,7 +152,6 @@ main(
 				return 1;
 			}
 		}
-		int tmpCount = zergCount;
 		char **results = Zerg_twoPaths(zergGraph, unitList, &zergCount, changeLimit);	
 		if(!results)
 		{
@@ -152,18 +162,8 @@ main(
 		{
 			printf("ALL ZERG ARE IN POSITION\n");
 			free(results[0]);
-			printf("----Zerg Health----\n");
 			for(int j = 0; j < tmpCount; j++)
 			{
-				if(unitList[j]->status && (double) unitList[j]->status->currHitPoints / unitList[j]->status->maxHitPoints < health)
-				{
-					printf("Zerg ID: %hu\tHealth: %1.0lf%%\n", unitList[j]->id, 
-							(double) unitList[j]->status->currHitPoints / unitList[j]->status->maxHitPoints * 100);
-				}
-				else if(!unitList[j]->status)
-				{
-					printf("Zerg ID: %hu\tHealth: Not Found\n", unitList[j]->id);
-				}
 				if(unitList[j]->loc)
 				{
 					free(unitList[j]->loc);
@@ -183,18 +183,8 @@ main(
 				printf("Remove Zerg #%s\n", results[i]);
 				free(results[i]);
 			}
-			printf("----Zerg Health----\n");
 			for(int j = 0; j < tmpCount - zergCount; j++)
 			{
-				if(unitList[j]->status && (double) unitList[j]->status->currHitPoints / unitList[j]->status->maxHitPoints < health)
-				{
-					printf("Zerg ID: %hu\tHealth: %1.0lf%%\n", unitList[j]->id, 
-							(double) unitList[j]->status->currHitPoints / unitList[j]->status->maxHitPoints * 100);
-				}
-				else if(!unitList[j]->status)
-				{
-					printf("Zerg ID: %hu\tHealth: Not Found\n", unitList[j]->id);
-				}
 				if(unitList[j]->loc)
 				{
 					free(unitList[j]->loc);
@@ -210,6 +200,7 @@ main(
 		free(results);
 		Graph_disassemble(zergGraph);
     }
+	puts("");
     return 0;
 }
 
@@ -234,13 +225,23 @@ Zerg_twoPaths(Graph *zergGraph, ZergUnit **unitList, int *zergCount, int changeL
 		{
 			if(i != j)
 			{
-				char **route;
-				char **newRoute;
+				char **route = NULL;
+				char **newRoute = NULL;
 				char *name = malloc(8);
 				char *next = malloc(8);
-				sprintf(name, "%hu", unitList[i]->id);
-				sprintf(next, "%hu", unitList[j]->id);
+				if(unitList[i])
+				{
+					sprintf(name, "%hu", unitList[i]->id);
+				}
+				if(unitList[j])
+				{
+					sprintf(next, "%hu", unitList[j]->id);
+				}
 				ssize_t hops = Dijkstra_path(zergGraph, name, next, &route); 
+				if(hops == 0 || route == NULL)
+				{
+					break;
+				}
 				bool adjacent = Graph_isAdjacent(zergGraph, name, next);
 				if(adjacent && zergUnit_distance(unitList[i], unitList[j]) < 1.143)
 				{
@@ -264,12 +265,39 @@ Zerg_twoPaths(Graph *zergGraph, ZergUnit **unitList, int *zergCount, int changeL
 				ssize_t newHops = Dijkstra_path(zergGraph, name, next, &newRoute); 
 				if(newHops == 1 && !adjacent)
 				{
+					char **myList = NULL;
+					ssize_t myNeigh = Graph_getNeighbors(zergGraph, name, &myList);
+					char **theirList = NULL;
+					ssize_t theirNeigh = Graph_getNeighbors(zergGraph, next, &theirList);
+					if(myNeigh < theirNeigh)
+					{
+						deletions[delTrack] = calloc(8, 1);
+						strcpy(deletions[delTrack], name);
+						delTrack++;
+						deleteRoute(unitList, name, *zergCount);
+						Graph_deleteNode(zergGraph, name);
+						*zergCount -= 1;
+						j++;
+					}
+					else
+					{
+						deletions[delTrack] = calloc(8, 1);
+						strcpy(deletions[delTrack], next);
+						delTrack++;
+						deleteRoute(unitList, next, *zergCount);
+						Graph_deleteNode(zergGraph, next);
+						*zergCount -= 1;
+					}
+					/*
 					deletions[delTrack] = calloc(8, 1);
 					strcpy(deletions[delTrack], newRoute[0]);
 					delTrack++;
 					deleteRoute(unitList, newRoute[0], *zergCount);
 					Graph_deleteNode(zergGraph, newRoute[0]);
 					*zergCount -= 1;
+					*/
+					free(myList);
+					free(theirList);
 				}	
 				char **split = calloc(1, sizeof(*split) * 10);
 				int splitCount = 0;
@@ -285,12 +313,30 @@ Zerg_twoPaths(Graph *zergGraph, ZergUnit **unitList, int *zergCount, int changeL
 				}
 				if(!adjacent && splitCount == 1)
 				{
-					deletions[delTrack] = calloc(8, 1);
-					strcpy(deletions[delTrack], newRoute[0]);
-					delTrack++;
-					deleteRoute(unitList, newRoute[0], *zergCount);
-					Graph_deleteNode(zergGraph, newRoute[0]);
-					*zergCount -= 1;
+					char **myList = NULL;
+					ssize_t myNeigh = Graph_getNeighbors(zergGraph, name, &myList);
+					char **theirList = NULL;
+					ssize_t theirNeigh = Graph_getNeighbors(zergGraph, next, &theirList);
+					if(myNeigh < theirNeigh)
+					{
+						deletions[delTrack] = calloc(8, 1);
+						strcpy(deletions[delTrack], name);
+						delTrack++;
+						deleteRoute(unitList, name, *zergCount);
+						Graph_deleteNode(zergGraph, name);
+						*zergCount -= 1;
+					}
+					else
+					{
+						deletions[delTrack] = calloc(8, 1);
+						strcpy(deletions[delTrack], next);
+						delTrack++;
+						deleteRoute(unitList, next, *zergCount);
+						Graph_deleteNode(zergGraph, next);
+						*zergCount -= 1;
+					}
+					free(myList);
+					free(theirList);
 				}
 				for(int z = 0; z < splitCount; z++)
 				{
@@ -368,7 +414,7 @@ deleteRoute(ZergUnit **route, char *node, int count)
 			free(route[i]);
 			for(int j = i + 1; j < count; j++)
 			{
-				route[i] = route[j];	
+				route[j - 1] = route[j];	
 			}
 		}
 		free(cmp);
