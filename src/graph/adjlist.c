@@ -337,7 +337,6 @@ Graph_updateEdgeWeight(
         {
             e->weight = weight;
         }
-		printf("Testing\n");
 
         e = e->next;
     }
