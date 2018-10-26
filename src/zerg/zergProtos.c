@@ -1345,14 +1345,6 @@ readGPS(
 		unit->loc->speed.fSpeed = gps->speed.fSpeed;
 		unit->loc->accuracy.fAccuracy = gps->accuracy.fAccuracy;
 	}
-	/*
-    printf("Long: %lf \u00B0\n", gps->longitude.dLong);
-    printf("Lat: %lf \u00B0\n", gps->latitude.dLat);
-    printf("Alt: %f fathoms\n", gps->altitude.fAltitude);
-    printf("Bearing: %f \u00B0\n", gps->bearing.fBearing);
-    printf("Speed: %f m\\s\n", gps->speed.fSpeed);
-    printf("Acc: %f m\n", gps->accuracy.fAccuracy);
-	*/
     free(gps);
 }
 
@@ -1378,6 +1370,10 @@ print_zergUnit(ZergUnit *z)
 double
 zergUnit_distance(ZergUnit *z1, ZergUnit *z2)
 {
+	if(!z1 || !z2)
+	{
+		return NAN;
+	}
 	double Radius = 6371000;
 	double radZ1Lat = z1->loc->latitude.dLat * (M_PI / 180);
 	double radZ2Lat = z2->loc->latitude.dLat * (M_PI / 180);
