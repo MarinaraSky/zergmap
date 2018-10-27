@@ -87,13 +87,14 @@ int             validateHeader(
     zergPacket * packet);
 
 /***************DECODE FUNCTIONS*****************/
-ZergUnit *
-create_unit(void);
+ZergUnit       *create_unit(
+    void);
+
 /* Used as a hub to call the other read functions */
 void            parseCapture(
     FILE * psychicCapture,
-	ZergUnit **unit,
-	int *zergCount);
+    ZergUnit ** unit,
+    int *zergCount);
 
 /* Reads the Pcap File header, contains a way to check  */
 /* validity for both big endian and little endian       */
@@ -121,14 +122,14 @@ void            readIpv6Packet(
 /* Reads UPD Packet Header */
 void            readUdpPacket(
     FILE * psychicCapture,
-    unsigned int *udpTotalLength
-    );
+    unsigned int *udpTotalLength);
 
 /* Reads Zerg Packet Header */
 void            readZergPacket(
     FILE * psychicCapture,
     unsigned int *udpTotalLength,
-	ZergUnit **unit, int *zergCount);
+    ZergUnit ** unit,
+    int *zergCount);
 
 /* Prints Message to screen */
 void            readMessage(
@@ -139,7 +140,7 @@ void            readMessage(
 void            readStatus(
     FILE * psychicCapture,
     unsigned int payloadLength,
-	ZergUnit *unit);
+    ZergUnit * unit);
 
 /* Readas Command packet and prints to screen */
 void            readCommand(
@@ -148,7 +149,7 @@ void            readCommand(
 /* Reads GPS Packets and prints to screen */
 void            readGPS(
     FILE * psychicCapture,
-	ZergUnit *unit);
+    ZergUnit * unit);
 
 /* Takes a char and bitwise manipulates it into an Int */
 void            hexToInt(
@@ -176,15 +177,16 @@ void            decimalDegreesToDMS(
  * @param z2 To Zerg
  * @return Distance as Double
  */
-double
-zergUnit_distance(ZergUnit *z1, ZergUnit *z2);
+double          zergUnit_distance(
+    ZergUnit * z1,
+    ZergUnit * z2);
 
 /**
  * @brief Prints id and GPS information for ZergUnit
  */
-void
-print_zergUnit(ZergUnit *z);
-	
+void            print_zergUnit(
+    ZergUnit * z);
+
 /**
  * @brief My attempt to find disjointed node paths between two nodes
  * @param zergGraph Graph of ZergUnits to check
@@ -193,8 +195,11 @@ print_zergUnit(ZergUnit *z);
  * @param changeLimit Used to set how many Zergs can be deleted
  * @return List of node id's that were deleted
  */
-char ** 
-Zerg_twoPaths(Graph *zergGraph, ZergUnit **unitList, int *zergCount, int changeLimit);	
+char          **Zerg_twoPaths(
+    Graph * zergGraph,
+    ZergUnit ** unitList,
+    int *zergCount,
+    int changeLimit);
 
 /**
  * @brief Used to delete and shift zergUnit list after deletion
@@ -202,6 +207,8 @@ Zerg_twoPaths(Graph *zergGraph, ZergUnit **unitList, int *zergCount, int changeL
  * @param node Zerg id as a string to be removed
  * @param count Pointer to count to keep track of number of zergUnits
  */
-void
-deleteRoute(ZergUnit **route, char *node, int *count);
+void            deleteRoute(
+    ZergUnit ** route,
+    char *node,
+    int *count);
 #endif

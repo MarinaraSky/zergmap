@@ -132,13 +132,13 @@ typedef struct gpsPayload
     } accuracy;
 } gpsPayload;
 
-typedef struct ZergUnit 
+typedef struct ZergUnit
 {
-	unsigned short id;
-	bool dupe;
-	payload *status;
-	gpsPayload *loc;
-	int seen;
-}ZergUnit;
+    unsigned short  id;
+    bool            dupe;
+    payload        *status;
+    gpsPayload     *loc;
+    int             seen;
+} ZergUnit;
 
 #endif

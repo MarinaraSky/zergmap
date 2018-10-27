@@ -630,8 +630,8 @@ validateHeader(
 void
 parseCapture(
     FILE * psychicCapture,
-	ZergUnit **unit,
-	int *zergCount)
+    ZergUnit ** unit,
+    int *zergCount)
 {
     unsigned int    ipTotalLength = 0;
     unsigned int    udpTotalLength = 0;
@@ -765,8 +765,8 @@ readEthernetPacket(
     }
     if (header->etherType != 0x0800 && header->etherType != 0x86DD)
     {
-		printf("Ether Type: %x\n", header->etherType);
-		printf("Index: %ld\n", ftell(psychicCapture));
+        printf("Ether Type: %x\n", header->etherType);
+        printf("Index: %ld\n", ftell(psychicCapture));
         printf("EtherType is invalid.\n");
         free(header);
         fclose(psychicCapture);
@@ -824,7 +824,7 @@ readIpv4Packet(
             if (header->version == 0x6)
             {
                 fseek(psychicCapture, -1, SEEK_CUR);
-				free(header);
+                free(header);
                 readIpv6Packet(psychicCapture, ipTotalLength);
                 return;
             }
@@ -879,12 +879,12 @@ readIpv4Packet(
         }
         i++;
     }
-	if(header->protocol == 0x29)
-	{
-		free(header);
+    if (header->protocol == 0x29)
+    {
+        free(header);
         readIpv6Packet(psychicCapture, ipTotalLength);
-		return;
-	}
+        return;
+    }
     if (header->protocol != 0x11)
     {
         printf("Not UDP Packet.\n");
@@ -952,7 +952,7 @@ readIpv6Packet(
     *ipTotalLength = header->payloadLength;
     if (header->nextHeader != 0x11)
     {
-		printf("NextHeader: %c\n", header->nextHeader);
+        printf("NextHeader: %c\n", header->nextHeader);
         printf("Not a UDP Packet.\n");
         fclose(psychicCapture);
         free(header);
@@ -964,8 +964,7 @@ readIpv6Packet(
 void
 readUdpPacket(
     FILE * psychicCapture,
-    unsigned int *udpTotalLength
-    )
+    unsigned int *udpTotalLength)
 {
     unsigned char   buff = 0;
     int             i = 0;
@@ -993,13 +992,13 @@ readUdpPacket(
         }
         i++;
     }
-	if(header->destPort != 3751)
-	{
-		fprintf(stderr, "Invalid Packet Destination.\n");
+    if (header->destPort != 3751)
+    {
+        fprintf(stderr, "Invalid Packet Destination.\n");
         fclose(psychicCapture);
         free(header);
         fileCorruption();
-	}
+    }
     free(header);
 }
 
@@ -1007,7 +1006,8 @@ void
 readZergPacket(
     FILE * psychicCapture,
     unsigned int *udpTotalLength,
-	ZergUnit **unit, int *zergCount)
+    ZergUnit ** unit,
+    int *zergCount)
 {
     unsigned char   buff = 0;
     int             i = 0;
@@ -1076,29 +1076,30 @@ readZergPacket(
         fileCorruption();
     }
     packet->totalLength -= 12;
-	short id = packet->sourceId;
-	ZergUnit *unitToMod = NULL;
-	for(int i = 0; i <= *zergCount; i++)
-	{
-		if(i == *zergCount)
-		{
-			*zergCount += 1;
-			unit[i] = create_unit();
-			unit[i]->id = id;
-			unitToMod = unit[i];
-			break;
-		}
-		else if(unit[i] != NULL && id == unit[i]->id)
-		{
-			if(packet->type == 3 && unit[i]->loc)
-			{
-				unit[i]->dupe = true;
-				break;
-			}
-			unitToMod = unit[i];	
-			break;
-		}
-	}
+    short           id = packet->sourceId;
+    ZergUnit       *unitToMod = NULL;
+
+    for (int i = 0; i <= *zergCount; i++)
+    {
+        if (i == *zergCount)
+        {
+            *zergCount += 1;
+            unit[i] = create_unit();
+            unit[i]->id = id;
+            unitToMod = unit[i];
+            break;
+        }
+        else if (unit[i] != NULL && id == unit[i]->id)
+        {
+            if (packet->type == 3 && unit[i]->loc)
+            {
+                unit[i]->dupe = true;
+                break;
+            }
+            unitToMod = unit[i];
+            break;
+        }
+    }
     switch (packet->type)
     {
     case 0:
@@ -1137,7 +1138,7 @@ void
 readStatus(
     FILE * psychicCapture,
     unsigned int payloadLength,
-	ZergUnit *unit)
+    ZergUnit * unit)
 {
     unsigned int    intCurrHit = 0;
     unsigned int    intMaxHit = 0;
@@ -1170,15 +1171,15 @@ readStatus(
             hexToInt(&status->sSpeed.iSpeed, buff);
         }
     }
-	unit->status = calloc(sizeof(status), 1);
+    unit->status = calloc(sizeof(status), 1);
     status->currHitPoints |= intCurrHit;
     status->maxHitPoints |= intMaxHit;
-	unit->status->currHitPoints = status->currHitPoints;
-	unit->status->maxHitPoints = status->maxHitPoints;
+    unit->status->currHitPoints = status->currHitPoints;
+    unit->status->maxHitPoints = status->maxHitPoints;
 
     while (i < payloadLength)
     {
-		getc(psychicCapture);
+        getc(psychicCapture);
         i++;
     }
     free(status);
@@ -1264,7 +1265,7 @@ readCommand(
 void
 readGPS(
     FILE * psychicCapture,
-	ZergUnit *unit)
+    ZergUnit * unit)
 {
     unsigned char   buff = 0;
     int             i = 0;
@@ -1299,23 +1300,23 @@ readGPS(
         }
         i++;
     }
-	if(gps->longitude.dLong > 180.0 || gps->latitude.dLat > 180.0 || 
-			gps->longitude.dLong < -180.0 || gps->latitude.dLat < -180.0)
-	{
-		fprintf(stderr, "Incorrect Longitude or Latitude.\n");
-		free(gps);
-		return;
-	}
-	if(unit != NULL)
-	{
-		unit->loc = calloc(sizeof(gpsPayload), 1);
-		unit->loc->longitude.dLong = gps->longitude.dLong;
-		unit->loc->latitude.dLat = gps->latitude.dLat;
-		unit->loc->altitude.fAltitude = gps->altitude.fAltitude * 1.8288;
-		unit->loc->bearing.fBearing = gps->bearing.fBearing;
-		unit->loc->speed.fSpeed = gps->speed.fSpeed;
-		unit->loc->accuracy.fAccuracy = gps->accuracy.fAccuracy;
-	}
+    if (gps->longitude.dLong > 180.0 || gps->latitude.dLat > 180.0 ||
+        gps->longitude.dLong < -180.0 || gps->latitude.dLat < -180.0)
+    {
+        fprintf(stderr, "Incorrect Longitude or Latitude.\n");
+        free(gps);
+        return;
+    }
+    if (unit != NULL)
+    {
+        unit->loc = calloc(sizeof(gpsPayload), 1);
+        unit->loc->longitude.dLong = gps->longitude.dLong;
+        unit->loc->latitude.dLat = gps->latitude.dLat;
+        unit->loc->altitude.fAltitude = gps->altitude.fAltitude * 1.8288;
+        unit->loc->bearing.fBearing = gps->bearing.fBearing;
+        unit->loc->speed.fSpeed = gps->speed.fSpeed;
+        unit->loc->accuracy.fAccuracy = gps->accuracy.fAccuracy;
+    }
     free(gps);
 }
 
@@ -1323,370 +1324,408 @@ readGPS(
  * @brief Creates and initializes a new ZergUnit 
  * @return Pointer to new ZergUnit
  */
-ZergUnit *
-create_unit(void)
+ZergUnit       *
+create_unit(
+    void)
 {
-	ZergUnit *new = calloc(sizeof(*new), 1);
-	if(!new)
-	{
-		fprintf(stderr, "Unable to allocate memory.\n");
-		exit(1);
-	}
-	new->status = NULL;
-	new->loc = NULL;
-	new->seen = 0;
-	return new;
+    ZergUnit       *new = calloc(sizeof(*new), 1);
+
+    if (!new)
+    {
+        fprintf(stderr, "Unable to allocate memory.\n");
+        exit(1);
+    }
+    new->status = NULL;
+    new->loc = NULL;
+    new->seen = 0;
+    return new;
 }
 
 void
-print_zergUnit(ZergUnit *z)
+print_zergUnit(
+    ZergUnit * z)
 {
-	printf("Z id: %d\n", z->id);
-	printf("Z Lat: %lf\n", z->loc->latitude.dLat);
-	printf("Z Lon: %lf\n", z->loc->longitude.dLong);
-	printf("Z Alt: %f\n", z->loc->altitude.fAltitude);
+    printf("Z id: %d\n", z->id);
+    printf("Z Lat: %lf\n", z->loc->latitude.dLat);
+    printf("Z Lon: %lf\n", z->loc->longitude.dLong);
+    printf("Z Alt: %f\n", z->loc->altitude.fAltitude);
 }
 
 double
-zergUnit_distance(ZergUnit *z1, ZergUnit *z2)
+zergUnit_distance(
+    ZergUnit * z1,
+    ZergUnit * z2)
 {
-	/* Almost copied exactly from 
-	 * https://math.stackexchange.com/questions/2075092/haversine-formula-that
-	 * -includes-an-altitude-parameter */
-	if(!z1 || !z2)
-	{
-		return NAN;
-	}
-	double Radius = 6371000;
-	double radZ1Lat = z1->loc->latitude.dLat * (M_PI / 180);
-	double radZ2Lat = z2->loc->latitude.dLat * (M_PI / 180);
-	double radZ1Lon = z1->loc->longitude.dLong * (M_PI / 180);
-	double radZ2Lon = z2->loc->longitude.dLong * (M_PI / 180);
-	double dLat = fabs(radZ2Lat - radZ1Lat);
-	double dLon = fabs(radZ2Lon - radZ1Lon);
-	double a = pow((sin(dLat /2)), 2) + cos(radZ1Lat) * cos(radZ2Lat) * pow(sin(dLon/2), 2);
-	double c = 2 *atan2(sqrt(a), sqrt(1-a));
-	double d = Radius * c;
-	d = sqrt(pow(d, 2) + pow((z1->loc->altitude.fAltitude - z2->loc->altitude.fAltitude), 2));	
-	return d;
+    /* Almost copied exactly from 
+     * https://math.stackexchange.com/questions/2075092/haversine-formula-that
+     * -includes-an-altitude-parameter */
+    if (!z1 || !z2)
+    {
+        return NAN;
+    }
+    double          Radius = 6371000;
+    double          radZ1Lat = z1->loc->latitude.dLat * (M_PI / 180);
+    double          radZ2Lat = z2->loc->latitude.dLat * (M_PI / 180);
+    double          radZ1Lon = z1->loc->longitude.dLong * (M_PI / 180);
+    double          radZ2Lon = z2->loc->longitude.dLong * (M_PI / 180);
+    double          dLat = fabs(radZ2Lat - radZ1Lat);
+    double          dLon = fabs(radZ2Lon - radZ1Lon);
+    double          a =
+        pow((sin(dLat / 2)),
+            2) + cos(radZ1Lat) * cos(radZ2Lat) * pow(sin(dLon / 2), 2);
+    double          c = 2 * atan2(sqrt(a), sqrt(1 - a));
+    double          d = Radius * c;
+
+    d = sqrt(pow(d, 2) +
+             pow((z1->loc->altitude.fAltitude - z2->loc->altitude.fAltitude),
+                 2));
+    return d;
 }
 
-char **
-Zerg_twoPaths(Graph *zergGraph, ZergUnit **unitList, int *zergCount, int changeLimit)	
+char          **
+Zerg_twoPaths(
+    Graph * zergGraph,
+    ZergUnit ** unitList,
+    int *zergCount,
+    int changeLimit)
 {
-	char **deletions = calloc(1, sizeof(*deletions) * *zergCount);
-	if(!deletions)
-	{
-		fprintf(stderr, "Cannot allocate memory.\n");
-		exit(1);
-	}
-	int delTrack = 0;
-	int tmpCount = 0;
-	int origCount = *zergCount;
-	if(changeLimit == 0)
-	{
-		tmpCount = *zergCount / 2;
-	}
-	else
-	{
-		tmpCount = changeLimit;
-	}
-	for(int i = 0; i < *zergCount; i++)
-	{
-		for(int j = 0; j < *zergCount; j++)
-		{
-			if(i != j)
-			{
-				char **route = NULL;
-				char **newRoute = NULL;
-				char *name = calloc(8, 1);
-				char *next = calloc(8, 1);
-				if(!name || !next)
-				{
-					fprintf(stderr, "Unable to allocate memory.\n");
-					exit(1);
-				}
-				ssize_t hops = 0;
-				if(unitList[i])
-				{
-					sprintf(name, "%hu", unitList[i]->id);
-				}
-				if(unitList[j])
-				{
-					sprintf(next, "%hu", unitList[j]->id);
-				}
-				bool adjacent = Graph_isAdjacent(zergGraph, name, next);
-				if(adjacent && zergUnit_distance(unitList[i], unitList[j]) < 1.143)
-				{
-					/* Deleting if they are to close */
-					deletions[delTrack] = calloc(8, 1);
-					strcpy(deletions[delTrack], next);
-					delTrack++;
-					deleteRoute(unitList, next, zergCount);
-					Graph_deleteNode(zergGraph, next);
-					free(name);
-					free(next);
-					continue;
-				}
-				/* Verifies connectivity */
-				hops = Dijkstra_path(zergGraph, name, next, &route); 
-				if(route == NULL)
-				{
-					free(name);
-					free(next);
-					continue;
-				}
-				/* Used to determine unique edge path */
-				for(ssize_t y = 0; y < hops -1; y++)
-				{
-					if(y != hops)
-					{
-						if(route[y] && route[y+1])
-						{
-							Graph_deleteEdge(zergGraph, route[y], route[y+1]);	
-						}
-					}
-				}
-				/* Finds 2nd edge path */
-				ssize_t newHops = Dijkstra_path(zergGraph, name, next, &newRoute); 
-				char **split = calloc(1, sizeof(*split) * 10);
-				if(!split)
-				{
-					fprintf(stderr, "Unable to allocate memory.\n");
-					exit(1);
-				}
-				char *lastEdge = NULL;
-				int splitCount = 0;
-				/* Removes 2nd edge path but alters the last hop of the original path
-				 * to emulate it taking an alternate path if possible */
-				for(int z = 1; z < hops - 1; z++)
-				{
-					for(int a = 1; a < newHops - 1; a++)
-					{
-						if(strcmp(route[z], newRoute[a]) == 0)
-						{
-							split[splitCount++] = strdup(newRoute[a]);
-							if(hops > 3)
-							{
-								Graph_addEdge(zergGraph, route[hops - 2], route[hops -1], 1);
-							}
-							Graph_deleteEdge(zergGraph, newRoute[a], newRoute[a + 1]);
-							free(lastEdge);
-							lastEdge = strdup(newRoute[a + 1]);
-						}
-					}		
-				}
-				free(newRoute);
-				/* Finds 3rd path to find disjointed node path */
-				newHops = Dijkstra_path(zergGraph, name, next, &newRoute); 
-				if(newHops > 1)
-				{
-					/* Rebuilds graph and deletes if node had no dijoint 
-					 * node path */
-					Graph_addEdge(zergGraph, split[0], lastEdge, 1);
-					for(ssize_t y = 0; y < hops; y++)
-					{
-						if(y != hops - 1)
-						{
-							Graph_addEdge(zergGraph, route[y], route[y+1], 1);	
-						}
-					}
-					for(ssize_t y = 0; y < newHops; y++)
-					{
-						if(y != newHops - 1)
-						{
-							Graph_addEdge(zergGraph, newRoute[y], newRoute[y+1], 1);	
-						}
-					}
-					if(!adjacent)
-					{
-						for(int z = 0; z < splitCount; z++)
-						{
-							free(split[z]);
-						}
-						free(lastEdge);
-						free(split);
-						free(name);
-						free(next);
-						free(route);
-						free(newRoute);
-						break;
-					}
-				}
-				if(newHops == 1 && !adjacent)
-				{
-					/* Deletes if no 2nd edge path was found */
-					char **myList = NULL;
-					ssize_t myNeigh = Graph_getNeighbors(zergGraph, name, &myList);
-					char **theirList = NULL;
-					ssize_t theirNeigh = Graph_getNeighbors(zergGraph, next, &theirList);
-					/* Crudely chooses with side to delete, with the idea being
-					 * the smaller side gets deleted */
-					if(myNeigh < theirNeigh)
-					{
-						deletions[delTrack] = calloc(8, 1);
-						if(!deletions[delTrack])
-						{
-							fprintf(stderr, "Unable to allocate memory.\n");
-							exit(1);
-						}
-						strcpy(deletions[delTrack], name);
-						delTrack++;
-						deleteRoute(unitList, name, zergCount);
-						Graph_deleteNode(zergGraph, name);
-						Graph_addEdge(zergGraph, split[0], lastEdge, 1);
-						for(ssize_t y = 0; y < hops; y++)
-						{
-							if(y != hops - 1)
-							{
-								Graph_addEdge(zergGraph, route[y], route[y+1], 1);	
-							}
-						}
-						for(ssize_t y = 0; y < newHops; y++)
-						{
-							if(y != newHops - 1)
-							{
-								Graph_addEdge(zergGraph, newRoute[y], newRoute[y+1], 1);	
-							}
-						}
-						for(int z = 0; z < splitCount; z++)
-						{
-							free(split[z]);
-						}
-						free(split);
-						free(lastEdge);
-						free(name);
-						free(next);
-						free(myList);
-						free(theirList);
-						free(route);
-						free(newRoute);
-						continue;
-					}
-					else
-					{
-						deletions[delTrack] = calloc(8, 1);
-						strcpy(deletions[delTrack], next);
-						delTrack++;
-						deleteRoute(unitList, next, zergCount);
-						Graph_deleteNode(zergGraph, next);
-						Graph_addEdge(zergGraph, split[0], lastEdge, 1);
-						for(ssize_t y = 0; y < hops; y++)
-						{
-							if(y != hops - 1)
-							{
-								Graph_addEdge(zergGraph, route[y], route[y+1], 1);	
-							}
-						}
-						for(ssize_t y = 0; y < newHops; y++)
-						{
-							if(y != newHops - 1)
-							{
-								Graph_addEdge(zergGraph, newRoute[y], newRoute[y+1], 1);	
-							}
-						}
-						free(split);
-						free(lastEdge);
-						free(name);
-						free(next);
-						free(myList);
-						free(theirList);
-						free(route);
-						free(newRoute);
-						continue;
-					}
-				}	
-				for(int z = 0; z < splitCount; z++)
-				{
-					free(split[z]);
-				}
-				free(split);
-				for(ssize_t y = 0; y < hops; y++)
-				{
-					if(y != hops - 1)
-					{
-						Graph_addEdge(zergGraph, route[y], route[y+1], 1);	
-					}
-				}
-				free(name);
-				free(next);
-				free(route);
-				free(newRoute);
-			}
-		}
-	}
-	*zergCount = delTrack;
-	/* Check to not delete more than half or -n value */
-	if(delTrack > tmpCount)
-	{
-		for(int i = 0; i < origCount; i++)
-		{
-			free(deletions[i]);
-		}
-		for(int i = 0; i < origCount - *zergCount; i++)
-		{
-			if(unitList[i]->loc)
-			{
-				free(unitList[i]->loc);
-			}
-			if(unitList[i]->status)
-			{
-				free(unitList[i]->status);
-			}
-			if(unitList[i])
-			{
-				free(unitList[i]);
-			}
-		}
-		free(deletions);
-		return NULL;
-	}
-	if(delTrack > 0)
-	{
-		return deletions;
-	}
-	else
-	{
-		deletions[0] = malloc(8);
-		if(!deletions)
-		{
-			fprintf(stderr, "Unable to allocate memory.\n");
-			exit(1);
-		}
-		strcpy(deletions[0], "NONE");
-		return deletions;
-	}
+    char          **deletions = calloc(1, sizeof(*deletions) * *zergCount);
+
+    if (!deletions)
+    {
+        fprintf(stderr, "Cannot allocate memory.\n");
+        exit(1);
+    }
+    int             delTrack = 0;
+    int             tmpCount = 0;
+    int             origCount = *zergCount;
+
+    if (changeLimit == 0)
+    {
+        tmpCount = *zergCount / 2;
+    }
+    else
+    {
+        tmpCount = changeLimit;
+    }
+    for (int i = 0; i < *zergCount; i++)
+    {
+        for (int j = 0; j < *zergCount; j++)
+        {
+            if (i != j)
+            {
+                char          **route = NULL;
+                char          **newRoute = NULL;
+                char           *name = calloc(8, 1);
+                char           *next = calloc(8, 1);
+
+                if (!name || !next)
+                {
+                    fprintf(stderr, "Unable to allocate memory.\n");
+                    exit(1);
+                }
+                ssize_t         hops = 0;
+
+                if (unitList[i])
+                {
+                    sprintf(name, "%hu", unitList[i]->id);
+                }
+                if (unitList[j])
+                {
+                    sprintf(next, "%hu", unitList[j]->id);
+                }
+                bool            adjacent =
+                    Graph_isAdjacent(zergGraph, name, next);
+                if (adjacent &&
+                    zergUnit_distance(unitList[i], unitList[j]) < 1.143)
+                {
+                    /* Deleting if they are to close */
+                    deletions[delTrack] = calloc(8, 1);
+                    strcpy(deletions[delTrack], next);
+                    delTrack++;
+                    deleteRoute(unitList, next, zergCount);
+                    Graph_deleteNode(zergGraph, next);
+                    free(name);
+                    free(next);
+                    continue;
+                }
+                /* Verifies connectivity */
+                hops = Dijkstra_path(zergGraph, name, next, &route);
+                if (route == NULL)
+                {
+                    free(name);
+                    free(next);
+                    continue;
+                }
+                /* Used to determine unique edge path */
+                for (ssize_t y = 0; y < hops - 1; y++)
+                {
+                    if (y != hops)
+                    {
+                        if (route[y] && route[y + 1])
+                        {
+                            Graph_deleteEdge(zergGraph, route[y],
+                                             route[y + 1]);
+                        }
+                    }
+                }
+                /* Finds 2nd edge path */
+                ssize_t         newHops =
+                    Dijkstra_path(zergGraph, name, next, &newRoute);
+                char          **split = calloc(1, sizeof(*split) * 10);
+
+                if (!split)
+                {
+                    fprintf(stderr, "Unable to allocate memory.\n");
+                    exit(1);
+                }
+                char           *lastEdge = NULL;
+                int             splitCount = 0;
+
+                /* Removes 2nd edge path but alters the last hop of the original path
+                 * to emulate it taking an alternate path if possible */
+                for (int z = 1; z < hops - 1; z++)
+                {
+                    for (int a = 1; a < newHops - 1; a++)
+                    {
+                        if (strcmp(route[z], newRoute[a]) == 0)
+                        {
+                            split[splitCount++] = strdup(newRoute[a]);
+                            if (hops > 3)
+                            {
+                                Graph_addEdge(zergGraph, route[hops - 2],
+                                              route[hops - 1], 1);
+                            }
+                            Graph_deleteEdge(zergGraph, newRoute[a],
+                                             newRoute[a + 1]);
+                            free(lastEdge);
+                            lastEdge = strdup(newRoute[a + 1]);
+                        }
+                    }
+                }
+                free(newRoute);
+                /* Finds 3rd path to find disjointed node path */
+                newHops = Dijkstra_path(zergGraph, name, next, &newRoute);
+                if (newHops > 1)
+                {
+                    /* Rebuilds graph and deletes if node had no dijoint 
+                     * node path */
+                    Graph_addEdge(zergGraph, split[0], lastEdge, 1);
+                    for (ssize_t y = 0; y < hops; y++)
+                    {
+                        if (y != hops - 1)
+                        {
+                            Graph_addEdge(zergGraph, route[y], route[y + 1],
+                                          1);
+                        }
+                    }
+                    for (ssize_t y = 0; y < newHops; y++)
+                    {
+                        if (y != newHops - 1)
+                        {
+                            Graph_addEdge(zergGraph, newRoute[y],
+                                          newRoute[y + 1], 1);
+                        }
+                    }
+                    if (!adjacent)
+                    {
+                        for (int z = 0; z < splitCount; z++)
+                        {
+                            free(split[z]);
+                        }
+                        free(lastEdge);
+                        free(split);
+                        free(name);
+                        free(next);
+                        free(route);
+                        free(newRoute);
+                        break;
+                    }
+                }
+                if (newHops == 1 && !adjacent)
+                {
+                    /* Deletes if no 2nd edge path was found */
+                    char          **myList = NULL;
+                    ssize_t         myNeigh =
+                        Graph_getNeighbors(zergGraph, name, &myList);
+                    char          **theirList = NULL;
+                    ssize_t         theirNeigh =
+                        Graph_getNeighbors(zergGraph, next, &theirList);
+                    /* Crudely chooses with side to delete, with the idea being
+                     * the smaller side gets deleted */
+                    if (myNeigh < theirNeigh)
+                    {
+                        deletions[delTrack] = calloc(8, 1);
+                        if (!deletions[delTrack])
+                        {
+                            fprintf(stderr, "Unable to allocate memory.\n");
+                            exit(1);
+                        }
+                        strcpy(deletions[delTrack], name);
+                        delTrack++;
+                        deleteRoute(unitList, name, zergCount);
+                        Graph_deleteNode(zergGraph, name);
+                        Graph_addEdge(zergGraph, split[0], lastEdge, 1);
+                        for (ssize_t y = 0; y < hops; y++)
+                        {
+                            if (y != hops - 1)
+                            {
+                                Graph_addEdge(zergGraph, route[y],
+                                              route[y + 1], 1);
+                            }
+                        }
+                        for (ssize_t y = 0; y < newHops; y++)
+                        {
+                            if (y != newHops - 1)
+                            {
+                                Graph_addEdge(zergGraph, newRoute[y],
+                                              newRoute[y + 1], 1);
+                            }
+                        }
+                        for (int z = 0; z < splitCount; z++)
+                        {
+                            free(split[z]);
+                        }
+                        free(split);
+                        free(lastEdge);
+                        free(name);
+                        free(next);
+                        free(myList);
+                        free(theirList);
+                        free(route);
+                        free(newRoute);
+                        continue;
+                    }
+                    else
+                    {
+                        deletions[delTrack] = calloc(8, 1);
+                        strcpy(deletions[delTrack], next);
+                        delTrack++;
+                        deleteRoute(unitList, next, zergCount);
+                        Graph_deleteNode(zergGraph, next);
+                        Graph_addEdge(zergGraph, split[0], lastEdge, 1);
+                        for (ssize_t y = 0; y < hops; y++)
+                        {
+                            if (y != hops - 1)
+                            {
+                                Graph_addEdge(zergGraph, route[y],
+                                              route[y + 1], 1);
+                            }
+                        }
+                        for (ssize_t y = 0; y < newHops; y++)
+                        {
+                            if (y != newHops - 1)
+                            {
+                                Graph_addEdge(zergGraph, newRoute[y],
+                                              newRoute[y + 1], 1);
+                            }
+                        }
+                        free(split);
+                        free(lastEdge);
+                        free(name);
+                        free(next);
+                        free(myList);
+                        free(theirList);
+                        free(route);
+                        free(newRoute);
+                        continue;
+                    }
+                }
+                for (int z = 0; z < splitCount; z++)
+                {
+                    free(split[z]);
+                }
+                free(split);
+                for (ssize_t y = 0; y < hops; y++)
+                {
+                    if (y != hops - 1)
+                    {
+                        Graph_addEdge(zergGraph, route[y], route[y + 1], 1);
+                    }
+                }
+                free(name);
+                free(next);
+                free(route);
+                free(newRoute);
+            }
+        }
+    }
+    *zergCount = delTrack;
+    /* Check to not delete more than half or -n value */
+    if (delTrack > tmpCount)
+    {
+        for (int i = 0; i < origCount; i++)
+        {
+            free(deletions[i]);
+        }
+        for (int i = 0; i < origCount - *zergCount; i++)
+        {
+            if (unitList[i]->loc)
+            {
+                free(unitList[i]->loc);
+            }
+            if (unitList[i]->status)
+            {
+                free(unitList[i]->status);
+            }
+            if (unitList[i])
+            {
+                free(unitList[i]);
+            }
+        }
+        free(deletions);
+        return NULL;
+    }
+    if (delTrack > 0)
+    {
+        return deletions;
+    }
+    else
+    {
+        deletions[0] = malloc(8);
+        if (!deletions)
+        {
+            fprintf(stderr, "Unable to allocate memory.\n");
+            exit(1);
+        }
+        strcpy(deletions[0], "NONE");
+        return deletions;
+    }
 }
 
 void
-deleteRoute(ZergUnit **route, char *node, int *count)
+deleteRoute(
+    ZergUnit ** route,
+    char *node,
+    int *count)
 {
-	for(int i = 0; i < *count; i++)
-	{
-		char *cmp = malloc(8);
-		if(!cmp)
-		{
-			fprintf(stderr, "Unable to allocate memory.\n");
-			exit(1);
-		}
-		sprintf(cmp, "%d", route[i]->id);
-		if(strcmp(cmp, node) == 0)
-		{
-			if(route[i]->loc)
-			{
-				free(route[i]->loc);
-			}
-			if(route[i]->status)
-			{
-				free(route[i]->status);
-			}
-			free(route[i]);
-			for(int j = i + 1; j < *count; j++)
-			{
-				route[j - 1] = route[j];	
-			}
-		}
-		free(cmp);
-	}
-	*count -= 1;
+    for (int i = 0; i < *count; i++)
+    {
+        char           *cmp = malloc(8);
+
+        if (!cmp)
+        {
+            fprintf(stderr, "Unable to allocate memory.\n");
+            exit(1);
+        }
+        sprintf(cmp, "%d", route[i]->id);
+        if (strcmp(cmp, node) == 0)
+        {
+            if (route[i]->loc)
+            {
+                free(route[i]->loc);
+            }
+            if (route[i]->status)
+            {
+                free(route[i]->status);
+            }
+            free(route[i]);
+            for (int j = i + 1; j < *count; j++)
+            {
+                route[j - 1] = route[j];
+            }
+        }
+        free(cmp);
+    }
+    *count -= 1;
 }
