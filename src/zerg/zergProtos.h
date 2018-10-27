@@ -2,6 +2,7 @@
 #define zergProtos_H_
 
 #include "zergStructs.h"
+#include "../graph/Graph.h"
 #include <stdio.h>
 /**************ENCODE FUNCTIONS*******************/
 /* Read Zerg Header and send to parsing function */
@@ -86,13 +87,14 @@ int             validateHeader(
     zergPacket * packet);
 
 /***************DECODE FUNCTIONS*****************/
-ZergUnit *
-create_unit(void);
+ZergUnit       *create_unit(
+    void);
+
 /* Used as a hub to call the other read functions */
 void            parseCapture(
     FILE * psychicCapture,
-	ZergUnit **unit,
-	int *zergCount);
+    ZergUnit ** unit,
+    int *zergCount);
 
 /* Reads the Pcap File header, contains a way to check  */
 /* validity for both big endian and little endian       */
@@ -120,14 +122,14 @@ void            readIpv6Packet(
 /* Reads UPD Packet Header */
 void            readUdpPacket(
     FILE * psychicCapture,
-    unsigned int *udpTotalLength
-    );
+    unsigned int *udpTotalLength);
 
 /* Reads Zerg Packet Header */
 void            readZergPacket(
     FILE * psychicCapture,
     unsigned int *udpTotalLength,
-	ZergUnit **unit, int *zergCount);
+    ZergUnit ** unit,
+    int *zergCount);
 
 /* Prints Message to screen */
 void            readMessage(
@@ -138,7 +140,7 @@ void            readMessage(
 void            readStatus(
     FILE * psychicCapture,
     unsigned int payloadLength,
-	ZergUnit *unit);
+    ZergUnit * unit);
 
 /* Readas Command packet and prints to screen */
 void            readCommand(
@@ -147,7 +149,7 @@ void            readCommand(
 /* Reads GPS Packets and prints to screen */
 void            readGPS(
     FILE * psychicCapture,
-	ZergUnit *unit);
+    ZergUnit * unit);
 
 /* Takes a char and bitwise manipulates it into an Int */
 void            hexToInt(
@@ -168,6 +170,45 @@ void            hexToDouble(
 void            decimalDegreesToDMS(
     double coordinate);
 
-double
-zergUnit_distance(ZergUnit *z1, ZergUnit *z2);
+/**
+ * @brief Calculates the difference in location between two
+ * zerg units.
+ * @param z1 From Zerg
+ * @param z2 To Zerg
+ * @return Distance as Double
+ */
+double          zergUnit_distance(
+    ZergUnit * z1,
+    ZergUnit * z2);
+
+/**
+ * @brief Prints id and GPS information for ZergUnit
+ */
+void            print_zergUnit(
+    ZergUnit * z);
+
+/**
+ * @brief My attempt to find disjointed node paths between two nodes
+ * @param zergGraph Graph of ZergUnits to check
+ * @param unitList Array of ZergUnit pointers
+ * @param zergCount Pointer to number of ZergUnits in unitList
+ * @param changeLimit Used to set how many Zergs can be deleted
+ * @return List of node id's that were deleted
+ */
+char          **Zerg_twoPaths(
+    Graph * zergGraph,
+    ZergUnit ** unitList,
+    int *zergCount,
+    int changeLimit);
+
+/**
+ * @brief Used to delete and shift zergUnit list after deletion
+ * @param route zergUnit list that had been traversed
+ * @param node Zerg id as a string to be removed
+ * @param count Pointer to count to keep track of number of zergUnits
+ */
+void            deleteRoute(
+    ZergUnit ** route,
+    char *node,
+    int *count);
 #endif

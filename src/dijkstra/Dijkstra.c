@@ -155,7 +155,7 @@ Dijkstra_path(
         pos = vmap_lookup(prev, pos);
     }
 
-    char          **results = malloc(hops * sizeof(*results));
+    char          **results = calloc(1, hops * sizeof(*results));
 
     if (!results)
     {
